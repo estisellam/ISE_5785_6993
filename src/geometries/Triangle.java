@@ -1,19 +1,19 @@
 package geometries;
-
-import java.util.List;
-
-import static primitives.Util.*;
-
-import primitives.*;
+import primitives.Point;
 
 /**
- * Triangle class represents Euclidean 2D triangle in 3D Cartesian coordinate
- * system represented by its 3 vertices
- * @author Dan
+ * class to represent a triangle
  */
-public class Triangle extends Polygon {
-   /**
-    * Types of algorithms for intersecting a Triangle by a ray
-    */
-
+public class Triangle extends Polygon
+{
+    /**
+     * constructor with 3 points for a triangle
+     * @param x
+     * @param y
+     * @param z
+     */
+    public Triangle(Point x, Point y, Point z)
+    {
+        super(x, y, z);
+    }
 }

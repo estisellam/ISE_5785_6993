@@ -1,31 +1,43 @@
 package geometries;
-
-import java.util.List;
-
-import static primitives.Util.alignZero;
-
 import primitives.*;
 
-/** Tube class represents Euclidean infinite cylinder in 3D Cartesian coordinate
- * system represented by its central ray and radius
- * @author Dan */
-public class Tube extends RadialGeometry {
-   /** Ray describing the central tube axis */
-   protected final Ray axis;
+/**
+ * class to represent a tube
+ */
+public class Tube extends RadialGeometry
+{
+   /**
+    * center of the tube
+    */
+   protected Point center;
+   /**
+    * direction of the tube
+    */
+   protected Vector direction;
 
-   /** Tube constructor given its radius and its central ray
-    * @param radius of the tube
-    * @param ray    central axis ray */
-   public Tube(double radius, Ray ray) {
-      super(radius);
-      axis = ray;
+   /**
+    * constructor with 3 points for a tube
+    * @param x
+    * @param a
+    * @param y
+    */
+   public Tube(Point x, Vector a, double y)
+   {
+      super(y);
+      center = x;
+      direction = a.normalize();
+      radius = y;
    }
 
+   /**
+    * get normal to the tube
+    * @param x
+    * @return
+    */
    @Override
-   public Vector getNormal(Point point) {
-      // projection of P-O on the ray:
-      double t = point.subtract(axis.origin()).dotProduct(axis.direction());
-      return point.subtract(axis.getPoint(t)).normalize();
-   }
+   public Vector getNormal(Point x)
+   {
+      return null;
 
+   }
 }

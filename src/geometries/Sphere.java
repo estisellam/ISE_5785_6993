@@ -1,43 +1,48 @@
 package geometries;
+import primitives.Vector;
+import primitives.Point;
 
-import java.util.List;
 
-import static primitives.Util.*;
-
-import primitives.*;
 
 /**
- * Sphere class represents Euclidean sphere in 3D Cartesian coordinate system
- * represented by its center (point) and radius
- * @author Dan
+ * class to represent a sphere
  */
-public class Sphere extends RadialGeometry {
+public class Sphere extends RadialGeometry
+{
    /**
-    * Sphere center
+    * center of the sphere
     */
-   private final Point o;
+   private final Point center;
 
    /**
-    * Sphere constructor by it's center and radius
-    * @param radius of the sphere
-    * @param center of the sphere
+    * constructor with point, radius and sphere
+    * @param center
+    * @param radius
     */
-   public Sphere(Point center, double radius) {
+   public Sphere(Point center, double radius)
+   {
       super(radius);
-      o = center;
+      this.center = center;
    }
 
    /**
-    * Center getter
-    * @return center point
+    * func get for normal
+    * @param point
+    * @return
     */
-   public Point getO() { return o; }
-
    @Override
    public Vector getNormal(Point point) {
-      // Create vector by connecting from the center to the point and getting unit
-      // vector
-      return point.subtract(o).normalize();
-   }
+      return null;}
 
+   /**
+    * ovveride tostring func
+    * @return
+    */
+   @Override
+   public String toString() {
+      return "Sphere{" +
+              "_center=" + center +
+              ", _radius=" + radius +
+              '}';
+   }
 }

@@ -1,27 +1,30 @@
 package geometries;
 
-import java.util.List;
+/**
+ * abstract class to represent radial geometry
+ */
+public abstract class RadialGeometry extends Geometry
+{
+   /**
+    * radius of the radial geometry
+    */
+   protected double radius;
 
-import static primitives.Util.*;
-
-import primitives.Ray;
-
-/** Abstract class for rounded geometries */
-public abstract class RadialGeometry extends Geometry {
-   /** Radius of the sphere */
-   protected final double radius;
-   /** Squared radius of the sphere */
-   protected final double rSquared;
-
-   /** Constructor initializing the radius of a rounded geometry
-    * @param radius the radius */
-   protected RadialGeometry(double radius) {
-      this.radius   = radius;
-      this.rSquared = radius * radius;
+   /**
+    * constructor with a radius
+    * @param a
+    */
+   public RadialGeometry(double a)
+   {
+      radius = a;
    }
 
-   /** Radius getter
-    * @return the radius */
-   public double getRadius() { return radius; }
-
+   /**
+    * func get for radius
+    * @return
+    */
+   public double getRadius()
+   {
+      return radius;
+   }
 }

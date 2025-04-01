@@ -1,99 +1,60 @@
 package primitives;
 
-import java.util.LinkedList;
-import java.util.List;
-
 /**
- * Class Ray is the basic class representing a ray of Euclidean geometry in
- * Cartesian 3-Dimensional coordinate system.<br>
- * A ray consists of those points on a line passing through a given point and
- * proceeding indefinitely, starting at the given point, in one direction only
- * along the line<br>
- * Ray direction is stored as a unit vector providing both line's direction and
- * the part of the line whose points belong to the ray
- * @author Dan Zilberstein
+ *  class represents ray
  */
-public class Ray {
-   /** Ray head point P&#x2080; */
-   private final Point  origin;
-
-   /** Ray direction vector v&#x302; */
-   private final Vector direction;
-
-   /** Inverted ray direction */
-   private final Vector inverted;
+public class Ray
+{
+   /**
+    * point of origin
+    */
+   public final Point _p0;
+   /**
+    * direction of the ray
+    */
+   public final Vector _dir;
 
    /**
-    * Ray constructor by ray beginning point and its direction
-    * @param p ray beginning point
-    * @param v ray direction vector
+    * constructor with point and vector
+    * @param p0
+    * @param dir
     */
-   public Ray(Point p, Vector v) {
-      origin    = p;
-      direction = v.normalize();
-      inverted  = new Vector(1 / direction.x(), 1 / direction.y(), 1 / direction.z());
-   }
-
-   /** The distance of moving the ray head point when required */
-   private static final double EPSILON = 0.1;
-
-   /**
-    * Ray constructor by ray beginning point and its direction, while the
-    * beginning
-    * point is moved by DELTA along the line defined by vector n and according to
-    * the direction of the ray
-    * @param p ray beginning point
-    * @param v ray direction vector
-    * @param n line vector for point p movement
-    */
-   public Ray(Point p, Vector v, Vector n) {
-      origin    = p.add(n.scale(n.dotProduct(v) >= 0 ? EPSILON : -EPSILON));
-      direction = v.normalize();
-      inverted  = new Vector(1 / direction.x(), 1 / direction.y(), 1 / direction.z());
+   public Ray(Point p0, Vector dir) {
+      _p0 = p0;
+      _dir = dir.normalize();
    }
 
    /**
-    * /** Getter of ray beginning point
-    * @return ray beginning point
+    * ovveride equals func
+    * @param object
+    * @return
     */
-   public Point origin() { return origin; }
-
-   /**
-    * Getter of ray direction
-    * @return direction vector (unit vector)
-    */
-   public Vector direction() { return direction; }
-
-   /**
-    * Getter of inverted direction
-    * @return inverted direction vector
-    */
-   public Vector inverted() { return inverted; }
-
-   /**
-    * Get point on ray at a distance from ray's head
-    * @param  t distance from ray head
-    * @return   the point
-    */
-   public Point getPoint(double t) {
-      try {
-         return origin.add(direction.scale(t));
-      } catch (IllegalArgumentException ignore) {
-         return origin;
-      }
+   public boolean equals(Object object) {
+      if (!(object instanceof Ray)) return false;
+      if (!super.equals(object)) return false;
+      Ray ray = (Ray) object;
+      return java.util.Objects.equals(_p0, ray._p0) && java.util.Objects.equals(_dir, ray._dir);
    }
 
+   /**
+    * ovveride hashcode func
+    * @return
+    */
 
-    @Override
-   public boolean equals(Object obj) {
-      if (this == obj) return true;
-      return (obj instanceof Ray other) && origin.equals(other.origin) && direction.equals(other.direction);
+   public int hashCode() {
+      return java.util.Objects.hash(super.hashCode(), _p0, _dir);
    }
 
+   /**
+    * ovveride tostring func
+    * @return
+    */
    @Override
-   public int hashCode() { return origin.hashCode() + direction.hashCode(); }
-
-   @Override
-   public String toString() { return "Ray: P0" + origin + "->" + direction; }
+   public String toString() {
+      return "primitives.Ray{" +
+              "_p0=" + _p0 +
+              ", _dir=" + _dir +
+              '}';
+   }
 
 }
