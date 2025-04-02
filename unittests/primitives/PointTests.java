@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * unit test for point class
+ * unit test for {@link primitives.Point} class
  */
 class PointTests {
 

@@ -20,12 +20,19 @@ public class Plane extends Geometry
     * @param x
     * @param y
     * @param z
+    * @throws IllegalArgumentException if points are collinear or the normal vector length is zero
     */
-   public Plane(Point x, Point y, Point z)
+   public Plane(Point x, Point y, Point z) throws IllegalArgumentException
    {
       point = x;
       Vector a = y.subtract(x);
       Vector b = z.subtract(x);
+
+      // Check if points are collinear
+      if (a.crossProduct(b).length() == 0) {
+         throw new IllegalArgumentException("The points are collinear and do not define a valid plane.");
+      }
+
       normal = a.crossProduct(b).normalize();
    }
 
