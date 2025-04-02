@@ -16,6 +16,8 @@ public abstract class RadialGeometry extends Geometry
     */
    public RadialGeometry(double a)
    {
+      if(a<=0)
+         throw new IllegalArgumentException("Error: radius should be greater than zero.");
       radius = a;
    }
 

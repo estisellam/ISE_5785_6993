@@ -31,8 +31,10 @@ public class Sphere extends RadialGeometry
     * @return
     */
    @Override
-   public Vector getNormal(Point point) {
-      return null;}
+   public Vector getNormal(Point point)
+   {
+      return null;
+   }
 
    /**
     * ovveride tostring func
