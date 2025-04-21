@@ -91,4 +91,5 @@ class CylinderTests
         assertEquals(1, result.length(), DELTA, "Normal should be unit vector near the axis");
         assertEquals(0d, result.dotProduct(axisDirection), DELTA, "Normal should be orthogonal to the axis near the axis");
     }
+
 }
