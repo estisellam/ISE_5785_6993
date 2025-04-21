@@ -1,10 +1,10 @@
 package geometries;
-
 import primitives.Point;
 import primitives.Vector;
 import primitives.Ray;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 /**
  * Unit tests for {@link geometries.Tube} class.
@@ -70,4 +70,52 @@ class TubeTests
         assertEquals(1, resultAtRightAngle.length(), DELTA, "Tube normal is not a unit vector at right angle point");
         assertEquals(0d, resultAtRightAngle.dotProduct(axisDirection), DELTA, "Tube normal should be orthogonal to the axis direction at right angle point");
     }
+
+    /**
+     * Test method for {@link geometries.Tube#findIntersections(primitives.Ray)}.
+     */
+    @Test
+    void testFindIntersections_Tube() {
+        Tube tube = new Tube(1, new Ray(new Point(0, 0, 0), new Vector(0, 0, 1)));
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Ray intersects tube (two points)
+        assertEquals(2,
+                tube.findIntersections(new Ray(new Point(2, 0, 1), new Vector(-1, 0, 0))).size(),
+                "Wrong number of intersections");
+
+        // TC02: Ray starts inside the tube
+        assertEquals(1,
+                tube.findIntersections(new Ray(new Point(0.5, 0, 0), new Vector(1, 0, 0))).size(),
+                "Ray inside tube should intersect once");
+
+        // TC03: Ray is outside the tube and does not intersect
+        assertNull(
+                tube.findIntersections(new Ray(new Point(2, 2, 0), new Vector(1, 0, 0))),
+                "Ray outside tube should not intersect");
+
+        // ============ Boundary Values Tests ==================
+
+        // TC04: Ray tangent to the tube (no intersection expected)
+        assertNull(
+                tube.findIntersections(new Ray(new Point(1, 1, 0), new Vector(0, -1, 0))),
+                "Tangent ray should not intersect");
+
+        // TC05: Ray exactly on the radius (grazes)
+        assertEquals(1,
+                tube.findIntersections(new Ray(new Point(1, 0, -1), new Vector(0, 0, 1))).size(),
+                "Ray grazing tube should intersect once");
+
+        // TC06: Ray parallel to axis and inside tube (no intersection with wall)
+        assertNull(
+                tube.findIntersections(new Ray(new Point(0.5, 0, -5), new Vector(0, 0, 1))),
+                "Ray along axis inside tube should not intersect wall");
+
+        // TC07: Ray orthogonal to tube axis and starts at tube's axis
+        assertEquals(1,
+                tube.findIntersections(new Ray(new Point(0, 0, 0), new Vector(1, 0, 0))).size(),
+                "Ray starting at axis should intersect once");
+    }
+
 }

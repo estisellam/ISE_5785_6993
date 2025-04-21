@@ -27,8 +27,11 @@ class CylinderTests
         Cylinder cylinder = new Cylinder(axisRay, radius, height);
     }
 
+    /**
+     * Test method for {@link geometries.Cylinder#getNormal(primitives.Point)}.
+     */
     @Test
-    void testGetNormal_EquivalencePartitions()
+    void testGetNormal()
     {
         // ============ Equivalence Partitions Tests ==============
 
@@ -43,22 +46,12 @@ class CylinderTests
         Vector result = cylinder.getNormal(sidePoint);
         assertEquals(1, result.length(), DELTA, "Cylinder normal is not a unit vector");
         assertEquals(0d, result.dotProduct(axisDirection), DELTA, "Cylinder normal should be orthogonal to the axis");
-    }
 
-    @Test
-    void testGetNormal_BoundaryValues()
-    {
         // =============== Boundary Values Tests ==================
-
-        Point axisPoint = new Point(0, 0, 0);
-        Vector axisDirection = new Vector(0, 0, 1);
-        double radius = 1;
-        double height = 5;
-        Cylinder cylinder = new Cylinder(new Ray(axisPoint, axisDirection), radius, height);
 
         // TC02: Normal of a point at the center of the bottom base
         Point bottomCenter = new Point(0, 0, 0);
-        Vector result = cylinder.getNormal(bottomCenter);
+        result = cylinder.getNormal(bottomCenter);
         assertEquals(axisDirection.scale(-1), result, "Normal should point opposite to axis direction at bottom base center");
 
         // TC03: Normal of a point at the center of the top base
@@ -75,79 +68,59 @@ class CylinderTests
         Point edgeTop = new Point(1, 0, height);
         result = cylinder.getNormal(edgeTop);
         assertEquals(axisDirection, result, "Normal at edge with top base should match top normal");
-    }
 
-    @Test
-    void testGetNormal_EdgeCase()
-    {
         // TC06: Point very close to the axis, checking numerical stability
-        Point axisPoint = new Point(0, 0, 0);
-        Vector axisDirection = new Vector(0, 0, 1);
-        double radius = 2;
-        double height = 5;
-        Cylinder cylinder = new Cylinder(new Ray(axisPoint, axisDirection), radius, height);
-
         Point closeToAxis = new Point(0.000001, 0, 2);
-        Vector result = cylinder.getNormal(closeToAxis);
+        result = cylinder.getNormal(closeToAxis);
         assertEquals(1, result.length(), DELTA, "Normal should be unit vector near the axis");
         assertEquals(0d, result.dotProduct(axisDirection), DELTA, "Normal should be orthogonal to the axis near the axis");
     }
 
     /**
-     * Test method for {@link geometries.Plane#findIntersections(primitives.Ray)}.
+     * Test method for {@link geometries.Cylinder#findIntersections(primitives.Ray)}.
      */
     @Test
-    public void testFindIntersections() {
-        Plane plane = new Plane(new Point(0, 0, 1), new Point(1, 0, 1), new Point(0, 1, 1));
+    void testFindIntersections() {
+        Cylinder cylinder = new Cylinder(
+                new Ray(new Point(0, 0, 0), new Vector(0, 0, 1)),
+                2, // radius
+                5  // height
+        );
 
         // ============ Equivalence Partitions Tests ==============
 
-        // TC01: Ray from outside, not parallel, hits the plane (1 point)
-        Ray ray1 = new Ray(new Point(0, 0, 0), new Vector(0, 0, 1));
-        List<Point> result1 = plane.findIntersections(ray1);
-        assertNotNull(result1, "Ray should hit the plane");
-        assertEquals(1, result1.size(), "Wrong number of points");
-        assertEquals(List.of(new Point(0, 0, 1)), result1, "Wrong intersection point");
+        // TC01: Ray intersects both side and one base
+        Ray r1 = new Ray(new Point(3, 0, 2), new Vector(-1, 0, 0));
+        assertEquals(2, cylinder.findIntersections(r1).size(), "Should intersect side and one base");
 
-        // TC02: Ray from outside, not parallel, misses the plane (0 points)
-        Ray ray2 = new Ray(new Point(0, 0, 2), new Vector(0, 0, 1));
-        assertNull(plane.findIntersections(ray2), "Ray should miss the plane");
+        // TC02: Ray starts inside cylinder and goes out through side
+        Ray r2 = new Ray(new Point(1, 0, 1), new Vector(1, 0, 0));
+        assertEquals(1, cylinder.findIntersections(r2).size(), "Ray inside should intersect once");
 
-        // =============== Boundary Values Tests ==================
+        // TC03: Ray misses cylinder completely
+        Ray r3 = new Ray(new Point(5, 5, 5), new Vector(1, 0, 0));
+        assertNull(cylinder.findIntersections(r3), "Ray misses cylinder");
 
-        // **** Group 1: Ray is parallel to plane
-        // TC11: Ray is outside the plane (0 points)
-        Ray ray11 = new Ray(new Point(0, 0, 2), new Vector(1, 0, 0));
-        assertNull(plane.findIntersections(ray11), "Ray parallel and outside");
+        // ============ Boundary Values Tests ==================
 
-        // TC12: Ray is inside the plane (0 points)
-        Ray ray12 = new Ray(new Point(0.5, 0.5, 1), new Vector(1, 0, 0));
-        assertNull(plane.findIntersections(ray12), "Ray parallel and in plane");
+        // TC04: Ray intersects exactly at top base center
+        Ray r4 = new Ray(new Point(0, 0, 6), new Vector(0, 0, -1));
+        assertEquals(1, cylinder.findIntersections(r4).size(), "Should intersect top base center");
 
-        // **** Group 2: Ray is orthogonal to plane
-        // TC21: Ray starts before the plane (1 point)
-        Ray ray21 = new Ray(new Point(0, 0, 0), new Vector(0, 0, 1));
-        List<Point> result21 = plane.findIntersections(ray21);
-        assertNotNull(result21, "Ray orthogonal before plane");
-        assertEquals(1, result21.size(), "Wrong number of points");
-        assertEquals(List.of(new Point(0, 0, 1)), result21, "Wrong intersection point");
+        // TC05: Ray tangent to cylinder side (no intersection)
+        Ray r5 = new Ray(new Point(2, 0, -1), new Vector(0, 0, 1));
+        assertNull(cylinder.findIntersections(r5), "Tangent ray should not intersect");
 
-        // TC22: Ray starts in the plane (0 points)
-        Ray ray22 = new Ray(new Point(0, 0, 1), new Vector(0, 0, 1));
-        assertNull(plane.findIntersections(ray22), "Ray orthogonal in plane");
+        // TC06: Ray along axis, enters bottom and exits top
+        Ray r6 = new Ray(new Point(0, 0, -1), new Vector(0, 0, 1));
+        assertEquals(2, cylinder.findIntersections(r6).size(), "Ray through axis should intersect both bases");
 
-        // TC23: Ray starts after the plane (0 points)
-        Ray ray23 = new Ray(new Point(0, 0, 2), new Vector(0, 0, 1));
-        assertNull(plane.findIntersections(ray23), "Ray orthogonal after plane");
-
-        // **** Group 3: Ray not parallel and not orthogonal, starts in plane (0 points)
-        Ray ray3 = new Ray(new Point(0.5, 0.5, 1), new Vector(0, 1, 1));
-        assertNull(plane.findIntersections(ray3), "Ray from in plane at angle");
-
-        // **** Group 4: Ray starts at plane's base point (0 points)
-        Ray ray4 = new Ray(new Point(0, 0, 1), new Vector(1, 1, 1));
-        assertNull(plane.findIntersections(ray4), "Ray from base point at angle");
+        // TC07: Ray hits only bottom base from below
+        Ray r7 = new Ray(new Point(0, 0, -1), new Vector(0, 0, 1));
+        assertEquals(2, cylinder.findIntersections(r7).size(), "Should hit both bases");
     }
+
+
 
 
 }
