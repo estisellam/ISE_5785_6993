@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * abstract class to represent a geometry
  */
-public abstract class Geometry
+public abstract class Geometry implements Intersectable
 {
    /**
     * abstract function to get normal

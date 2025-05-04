@@ -87,11 +87,7 @@ public class Polygon extends Geometry {
       return plane.getNormal(point);
    }
 
-   /**
-    * find intersections func
-    * @param ray the ray to find intersections with
-    * @return a list of intersection points or null if there are no intersections
-    */
+
    @Override
    public List<Point> findIntersections(Ray ray) {
       // Find intersection with the plane

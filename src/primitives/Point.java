@@ -1,138 +1,170 @@
 package primitives;
 
 /**
- * class to represent a point in 3D space
+ * Represents a point in 3D space.
+ * <p>
+ * This class provides methods for performing operations such as
+ * calculating distances, adding vectors, and subtracting points.
+ * </p>
+ * <p>
+ * The {@code Point} class is immutable and thread-safe.
+ * </p>
+ *
+ * <p>Usage example:</p>
+ * <pre>
+ *     Point p1 = new Point(1, 2, 3);
+ *     Point p2 = new Point(4, 5, 6);
+ *     Vector v = p1.subtract(p2);
+ *     double distance = p1.distance(p2);
+ * </pre>
+ *
+ * @author esti vaknin
+ * @version 1.0
+ * @since 2023
  */
-public class Point
-{
-   /**
-    * coordinate of the point in 3d
-    */
-   protected final Double3 coordinate;
-   /**
-    * point at origin
-    */
-   public static final Point ZERO = new Point(0, 0, 0);
+public class Point {
 
-   /**
-    * constructor with 3 points
-    * @param x
-    * @param y
-    * @param z
-    */
-   public Point(double x, double y, double z)
-   {
-      coordinate = new Double3(x, y, z);
-   }
+    /**
+     * The coordinates of the point in 3D space.
+     */
+    protected final Double3 coordinates;
 
-   /**
-    * get point from double3
-    * @param x
-    */
-   public Point(Double3 x)
-   {
-      coordinate = x;
-   }
-   public double getX()
-    {
-        return coordinate.d1();
-    }
-    public double getY()
-    {
-        return coordinate.d2();
-    }
-    public double getZ()
-    {
-        return coordinate.d3();
+    /**
+     * A constant representing the origin point (0, 0, 0).
+     */
+    public static final Point ZERO = new Point(0, 0, 0);
+
+    /**
+     * Constructs a new {@code Point} with the specified x, y, and z coordinates.
+     *
+     * @param x the x-coordinate
+     * @param y the y-coordinate
+     * @param z the z-coordinate
+     */
+    public Point(double x, double y, double z) {
+        coordinates = new Double3(x, y, z);
     }
 
-   /**
-    * get coordinate of the point
-    * @return
-    */
-    public Double3 getCoordinate()
-    {
-        return coordinate;
+    /**
+     * Constructs a new {@code Point} from a {@link Double3} object.
+     *
+     * @param x the {@code Double3} object representing the coordinates
+     */
+    public Point(Double3 x) {
+        coordinates = x;
     }
 
-   /**
-    * vector between two points
-    * @param a
-    * @return
-    */
-   public Vector subtract(Point a)
-   {
-      Double3 d=this.coordinate.subtract(a.coordinate);
-      return new Vector(d.d1(), d.d2(), d.d3());
-   }
-   /**
-    * add a vector to point
-    */
-   public Point add(Vector a)
-   {
-      Double3 d=this.coordinate.add(a.coordinate);
-      return new Point(d.d1(), d.d2(), d.d3());
-   }
+    /**
+     * Returns the x-coordinate of the point.
+     *
+     * @return the x-coordinate
+     */
+    public double getX() {
+        return coordinates.d1();
+    }
 
-   /**
-    * distance squared between two points
-    * @param a - point
-    * @return  distance squared
-    */
-   public double distanceSquared(Point a)
-   {
-      double x= this.coordinate.d1()-a.coordinate.d1();
-      double y= this.coordinate.d2()-a.coordinate.d2();
-      double z= this.coordinate.d3()-a.coordinate.d3();
-      return x*x+y*y+z*z;
-   }
+    /**
+     * Returns the y-coordinate of the point.
+     *
+     * @return the y-coordinate
+     */
+    public double getY() {
+        return coordinates.d2();
+    }
 
-   /**
-    * distance between two points
-    * @param a
-    * @return
-    */
-   public double distance(Point a)
-   {
-      return Math.sqrt(this.distanceSquared(a));
-   }
+    /**
+     * Returns the z-coordinate of the point.
+     *
+     * @return the z-coordinate
+     */
+    public double getZ() {
+        return coordinates.d3();
+    }
 
-   /**
-    * function to check if two points are equal
-    * @param obj
-    * @return
-    */
+    /**
+     * Returns the coordinates of the point as a {@link Double3} object.
+     *
+     * @return the coordinates of the point
+     */
+    public Double3 getCoordinate() {
+        return coordinates;
+    }
 
-   @Override
-   public boolean equals(Object obj)
-   {
-      if (this == obj) return true;
-      if (!(obj instanceof Point point)) return false;
-      return coordinate.equals(point.coordinate);
-   }
+    /**
+     * Subtracts the specified point from this point and returns the resulting vector.
+     *
+     * @param a the point to subtract
+     * @return the resulting vector
+     */
+    public Vector subtract(Point a) {
+        Double3 d = this.coordinates.subtract(a.coordinates);
+        return new Vector(d.d1(), d.d2(), d.d3());
+    }
 
-   /**
-    * function to get hash code of the point
-    * @return
-    */
-   @Override
-    public int hashCode()
-   {
-        return coordinate.hashCode();
-   }
+    /**
+     * Adds the specified vector to this point and returns the resulting point.
+     *
+     * @param a the vector to add
+     * @return the resulting point
+     */
+    public Point add(Vector a) {
+        Double3 d = this.coordinates.add(a.coordinates);
+        return new Point(d.d1(), d.d2(), d.d3());
+    }
 
+    /**
+     * Calculates the squared distance between this point and the specified point.
+     *
+     * @param a the other point
+     * @return the squared distance
+     */
+    public double distanceSquared(Point a) {
+        double x = this.coordinates.d1() - a.coordinates.d1();
+        double y = this.coordinates.d2() - a.coordinates.d2();
+        double z = this.coordinates.d3() - a.coordinates.d3();
+        return x * x + y * y + z * z;
+    }
 
-   /**
-    * ovveride function to print point
-    * @return
-    */
+    /**
+     * Calculates the distance between this point and the specified point.
+     *
+     * @param a the other point
+     * @return the distance
+     */
+    public double distance(Point a) {
+        return Math.sqrt(this.distanceSquared(a));
+    }
 
-   @Override
-   public String toString()
-   {
-      return "Point{" + "coordinate=" + coordinate + '}';
-   }
+    /**
+     * Compares this point to the specified object for equality.
+     *
+     * @param obj the object to compare
+     * @return {@code true} if the objects are equal, {@code false} otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Point point)) return false;
+        return (obj instanceof Point other) && coordinates.equals(other.coordinates);
+    }
 
+    /**
+     * Returns the hash code value for this point.
+     *
+     * @return the hash code value
+     */
+    @Override
+    public int hashCode() {
+        return coordinates.hashCode();
+    }
 
-
+    /**
+     * Returns a string representation of this point.
+     *
+     * @return a string representation of the point
+     */
+    @Override
+    public String toString() {
+        return "Point{" + "coordinate=" + coordinates + '}';
+    }
 }

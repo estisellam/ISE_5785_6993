@@ -1,8 +1,9 @@
 package geometries;
-import primitives.*;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import primitives.*;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link geometries.Sphere} class.
@@ -33,23 +34,34 @@ class SphereTests {
     @Test
     void testGetNormal() {
         // ============ Equivalence Partition Tests ==============
-        // TC01: Normal of a simple sphere
-        Point center = new Point(0, 0, 0);
+
+        // TC01: Normal on a point on the surface of the tube
+        Point axisPoint = new Point(0, 0, 0);             // Point on the axis of the tube
+        Vector axisDirection = new Vector(0, 0, 1);       // Direction of the tube's axis
         double radius = 1;
-        Sphere sphere = new Sphere(center, radius);
+        Ray axisRay = new Ray(axisPoint, axisDirection);  // Tube's axis
+        Tube tube = new Tube(radius, axisRay);
 
-        // Ensure no exception is thrown when calling getNormal
-        assertDoesNotThrow(() -> sphere.getNormal(center), "No exception expected for getNormal method on Sphere");
+        // Choose a point on the surface of the tube (distance from axis is exactly the radius)
+        Point surfacePoint = new Point(1, 0, 5); // 1 unit in x-direction from axis, z=5
 
-        // Getting the normal vector and validating its properties
-        Vector result = sphere.getNormal(center);
+        assertDoesNotThrow(() -> tube.getNormal(surfacePoint), "No exception expected for getNormal on surface point");
+        Vector normal = tube.getNormal(surfacePoint);
 
-        // Normal should be a unit vector
-        assertEquals(1, result.length(), DELTA, "Sphere normal is not a unit vector");
+        // Check that the normal is a unit vector
+        assertEquals(1, normal.length(), DELTA, "Normal vector should be normalized");
 
-        // The normal vector should point outward, which means its dot product with a zero vector should be 0
-        assertEquals(0d, result.dotProduct(center.subtract(center)), DELTA, "Sphere normal should point outward");
+        // Check orthogonality to the axis direction
+        assertEquals(0, normal.dotProduct(axisDirection), DELTA, "Normal should be orthogonal to axis direction");
+
+        // TC02: Another surface point
+        Point surfacePoint2 = new Point(0, 1, -2); // y=1 from axis, z=-2
+        assertDoesNotThrow(() -> tube.getNormal(surfacePoint2), "No exception expected for getNormal at another surface point");
+        Vector normal2 = tube.getNormal(surfacePoint2);
+        assertEquals(1, normal2.length(), DELTA, "Normal vector should be normalized");
+        assertEquals(0, normal2.dotProduct(axisDirection), DELTA, "Normal should be orthogonal to axis direction");
     }
+
 
 
     /** a point used in some tests */
@@ -66,6 +78,7 @@ class SphereTests {
         Sphere sphere = new Sphere(p100, 1d);
         final Point gp1 = new Point(0.0651530771650466, 0.355051025721682, 0);
         final Point gp2 = new Point(1.53484692283495, 0.844948974278318, 0);
+        final Point gp3 =new Point(1.4114378277661477, 0.9114378277661477, 0.0);
         final var exp = List.of(gp1, gp2);
         final Vector v310 = new Vector(3, 1, 0);
         final Vector v110 = new Vector(1, 1, 0);
@@ -86,7 +99,7 @@ class SphereTests {
         List<Point> result3 = sphere.findIntersections(ray3);
         assertNotNull(result3, "Ray starts inside the sphere");
         assertEquals(1, result3.size(), "Wrong number of points");
-        assertEquals(List.of(gp2), result3, "Wrong intersection point");
+        assertEquals(List.of(gp3), result3, "Wrong intersection point");
 
         // TC04: Ray starts after the sphere (0 points)
         Ray ray4 = new Ray(new Point(2, 0, 0), new Vector(1, 0, 0));
@@ -101,7 +114,7 @@ class SphereTests {
         assertEquals(1, result11.size(), "Wrong number of points");
 
         // TC12: Ray starts at sphere and goes outside (0 points)
-        Ray ray12 = new Ray(gp1, v110);
+        Ray ray12 = new Ray(gp1, gp1.subtract(p100));
         assertNull(sphere.findIntersections(ray12), "Ray from surface outward");
 
         // Group 2: Ray's line goes through the center

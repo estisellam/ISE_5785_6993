@@ -20,11 +20,7 @@ public class Triangle extends Polygon
         super(x, y, z);
     }
 
-    /**
-     * func for find intersections when given a ray
-     * @param ray the ray to find intersections with
-     * @return list of points of intersection or null if no intersection
-     */
+
     @Override
     public List<Point> findIntersections(Ray ray) {
         List<Point> planeIntersections = plane.findIntersections(ray);

@@ -60,11 +60,7 @@ public class Sphere extends RadialGeometry
       return "Sphere:" + "center:" + center + "radius:" + radius;
    }
 
-   /**
-    * find intersections with a ray
-    * @param ray the ray to find intersections with
-    * @return a list of intersection points
-    */
+
    @Override
    public List<Point> findIntersections(Ray ray) {
       Point p0 = ray.getHead();
@@ -82,12 +78,14 @@ public class Sphere extends RadialGeometry
       double dSquared = alignZero(u.lengthSquared() - tm * tm);
       double rSquared = radius * radius;
 
-      if (dSquared >= rSquared)
-         return null;
+      if (dSquared >= rSquared) {
+         return null; // No intersection, the ray doesn't intersect the sphere
+      }
 
       double thSquared = alignZero(rSquared - dSquared);
-      if (isZero(thSquared))
-         return null;
+      if (isZero(thSquared)) {
+         return null; // Exactly one intersection, ray is tangent to the sphere
+      }
 
       double th = Math.sqrt(thSquared);
       double t1 = alignZero(tm - th);
@@ -97,16 +95,19 @@ public class Sphere extends RadialGeometry
       boolean t1Valid = t1 > 0 && !isZero(t1);
       boolean t2Valid = t2 > 0 && !isZero(t2);
 
-      if (t1Valid && t2Valid)
+      if (t1Valid && t2Valid) {
          return List.of(ray.getPoint(t1), ray.getPoint(t2));
+      }
 
-      if (t1Valid)
+      if (t1Valid) {
          return List.of(ray.getPoint(t1));
+      }
 
-      if (t2Valid)
+      if (t2Valid) {
          return List.of(ray.getPoint(t2));
+      }
 
-      return null;
+      return null; // No valid intersection
    }
 
 

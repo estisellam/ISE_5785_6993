@@ -38,11 +38,7 @@ public class Geometries implements Intersectable
         this.geometries.addAll(Arrays.asList(geometries));
     }
 
-    /**
-     * Find all intersection points of the given ray with the geometries in the collection
-     * @param ray the ray to intersect with
-     * @return list of all intersection points, or null if none
-     */
+
     @Override
     public List<Point> findIntersections(Ray ray) {
         List<Point> intersections = null;

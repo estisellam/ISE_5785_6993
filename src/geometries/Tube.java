@@ -39,11 +39,7 @@ public class Tube extends RadialGeometry
       return normal.normalize();
    }
 
-   /**
-    * func to get intersections with a ray
-    * @param ray the ray to find intersections with
-    * @return a list of intersection points or null if no intersections
-    */
+
    @Override
    public List<Point> findIntersections(Ray ray)
    {

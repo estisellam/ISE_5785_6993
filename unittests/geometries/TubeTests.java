@@ -51,25 +51,32 @@ class TubeTests
     @Test
     void testGetNormal() {
         // ============ Equivalence Partition Tests ==============
-        // TC01: Normal of a simple tube
+
         Point axisPoint = new Point(0, 0, 0);  // Point on the axis of the tube
         Vector axisDirection = new Vector(0, 0, 1);  // Direction of the tube's axis
         double radius = 1;
         Ray ray = new Ray(axisPoint, axisDirection);
         Tube tube = new Tube(radius, ray);
-        assertDoesNotThrow(() -> tube.getNormal(axisPoint), "No exception expected for getNormal method on Tube");
-        Vector result = tube.getNormal(axisPoint);
-        assertEquals(1, result.length(), DELTA, "Tube normal is not a unit vector");
-        assertEquals(0d, result.dotProduct(axisDirection), DELTA, "Tube normal should be orthogonal to the axis direction");
 
-        // ============ Equivalence Partition Tests ==============
-        // TC02: Test case where the connection between the point and the axis creates a right angle
-        Point pointAtRightAngle = new Point(1, 0, 0); // This should create a right angle with the axis
-        assertDoesNotThrow(() -> tube.getNormal(pointAtRightAngle), "No exception expected for getNormal method at right angle");
+        // TC01: Point on the surface of the tube at a right angle to the axis
+        Point pointAtRightAngle = new Point(1, 0, 0); // Should be on the surface
+        assertDoesNotThrow(() -> tube.getNormal(pointAtRightAngle),
+                "No exception expected for getNormal method at right angle");
         Vector resultAtRightAngle = tube.getNormal(pointAtRightAngle);
         assertEquals(1, resultAtRightAngle.length(), DELTA, "Tube normal is not a unit vector at right angle point");
-        assertEquals(0d, resultAtRightAngle.dotProduct(axisDirection), DELTA, "Tube normal should be orthogonal to the axis direction at right angle point");
+        assertEquals(0d, resultAtRightAngle.dotProduct(axisDirection), DELTA,
+                "Tube normal should be orthogonal to the axis direction at right angle point");
+
+        // TC02: Point on the surface of the tube at a general position
+        Point generalPoint = new Point(1, 0, 5); // Same distance from axis, but higher along z-axis
+        assertDoesNotThrow(() -> tube.getNormal(generalPoint),
+                "No exception expected for getNormal at a general surface point");
+        Vector normalGeneral = tube.getNormal(generalPoint);
+        assertEquals(1, normalGeneral.length(), DELTA, "Tube normal is not a unit vector at general point");
+        assertEquals(0d, normalGeneral.dotProduct(axisDirection), DELTA,
+                "Tube normal should be orthogonal to the axis direction at general point");
     }
+
 
     /**
      * Test method for {@link geometries.Tube#findIntersections(primitives.Ray)}.

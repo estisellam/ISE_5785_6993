@@ -1,5 +1,7 @@
 package primitives;
 
+import static primitives.Util.isZero;
+
 /**
  *  class represents ray
  */
@@ -32,10 +34,7 @@ public class Ray
     */
    public Point getPoint(double a)
    {
-      if(a==0)
-      {
-         return head;
-      }
+      if(isZero(a)) return head;
       //P=P0+V*t
          return head.add(direction.scale(a));
    }
@@ -65,10 +64,8 @@ public class Ray
     */
    public boolean equals(Object object)
    {
-      if (!(object instanceof Ray)) return false;
-      if (!super.equals(object)) return false;
-      Ray ray = (Ray) object;
-      return java.util.Objects.equals(head, ray.head) && java.util.Objects.equals(direction, ray.direction);
+      if (this == object) return true;
+      return (object instanceof Ray other) && head.equals(other.head) && direction.equals(other.direction);
    }
 
    /**
