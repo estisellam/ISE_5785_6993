@@ -5,7 +5,7 @@ import static primitives.Util.isZero;
 /**
  * Represents a 3D vector in space.
  * Provides methods for vector arithmetic, normalization, and other vector operations.
- *
+ * <p>
  * This class is immutable and thread-safe.
  *
  * @author esti

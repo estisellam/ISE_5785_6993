@@ -25,14 +25,13 @@ package primitives;
 public class Point {
 
     /**
-     * The coordinates of the point in 3D space.
-     */
-    protected final Double3 coordinates;
-
-    /**
      * A constant representing the origin point (0, 0, 0).
      */
     public static final Point ZERO = new Point(0, 0, 0);
+    /**
+     * The coordinates of the point in 3D space.
+     */
+    protected final Double3 coordinates;
 
     /**
      * Constructs a new {@code Point} with the specified x, y, and z coordinates.

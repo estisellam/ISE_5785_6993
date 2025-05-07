@@ -1,6 +1,9 @@
 package geometries;
 
-import primitives.*;
+import primitives.Point;
+import primitives.Ray;
+import primitives.Vector;
+
 import java.util.List;
 
 import static primitives.Util.alignZero;
@@ -9,7 +12,7 @@ import static primitives.Util.alignZero;
  * Represents a triangle in 3D space, defined by three vertices.
  * Extends the {@link Polygon} class.
  * Provides methods to retrieve the triangle's properties.
- *
+ * <p>
  * A triangle is a special case of a polygon with exactly three vertices.
  * It is always convex and lies in a single plane.
  *
