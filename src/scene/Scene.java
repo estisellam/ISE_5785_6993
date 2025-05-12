@@ -54,8 +54,8 @@ public class Scene {
 
     /**
      * set the geometries of the scene
-     * @param g
-     * @return
+     * @param g the geometries of the scene
+     * @return this scene object (for chaining)
      */
     public Scene setGeometries(Geometries g) {
         geometries = g;
