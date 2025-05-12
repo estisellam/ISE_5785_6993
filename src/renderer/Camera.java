@@ -1,8 +1,10 @@
 package renderer;
 
+import primitives.Color;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
+import scene.Scene;
 
 import java.util.MissingResourceException;
 
@@ -43,12 +45,20 @@ public class Camera implements Cloneable {
     /**
      * Number of pixels in the X direction.
      */
-    private int nX = 0;
+    private int nX = 1;
     /**
      * Number of pixels in the Y direction.
      */
-    private int nY = 0;
+    private int nY = 1;
 
+    /**
+     * ImageWriter instance for rendering the image.
+     */
+    private ImageWriter imageWriter;
+    /**
+     * RayTracerBase instance for ray tracing.
+     */
+    private RayTracerBase rayTracer;
     /**
      * Default constructor for Camera.
      */
@@ -107,11 +117,77 @@ public class Camera implements Cloneable {
     }
 
     /**
+     * Renders the image by casting rays through all pixels on the view plane.
+     *
+     * @return the camera instance (for method chaining)
+     */
+    public Camera renderImage() {
+        for (int i = 0; i < nY; i++) {
+            for (int j = 0; j < nX; j++) {
+                castRay(i, j);
+            }
+        }
+        return this;
+    }
+
+
+    /**
+     * Prints the grid on the image.
+     * @param interval interval between grid lines
+     * @param color color of the grid lines
+     * @return the camera instance
+     */
+    public Camera printGrid(int interval, Color color) {
+        for (int i = 0; i < nY; i++) {
+            for (int j = 0; j < nX; j++) {
+                if (i % interval == 0 || j % interval == 0) {
+                    imageWriter.writePixel(j, i, color);
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Writes the rendered image to a file with the given name
+     * and returns the camera instance.
+     *
+     * @param name the base name of the output image file (without extension)
+     * @return this camera instance
+     */
+    public Camera writeToImage(String name) {
+        imageWriter.writeToImage(name);
+        return this;
+    }
+
+    /**
+     * Casts a ray through the given pixel and colors it using the ray tracer.
+     *
+     * @param i row index (Y-axis)
+     * @param j column index (X-axis)
+     */
+    private void castRay(int i, int j) {
+        Ray ray = constructRay(nX, nY, j, i);
+        primitives.Color color = rayTracer.traceRay(ray);
+        imageWriter.writePixel(j, i, color);
+    }
+
+
+
+    /**
      * Inner static Builder class for building Camera instances.
      */
     public static class Builder {
+        /**
+         * Camera instance to be built.
+         */
         private final Camera camera = new Camera();
 
+        /**
+         * Sets the image writer for the camera.
+         * @param location location of the image
+         * @return the image writer
+         */
         public Builder setLocation(Point location) {
             if (location == null)
                 throw new IllegalArgumentException("Location cannot be null");
@@ -203,8 +279,10 @@ public class Camera implements Cloneable {
                 throw new IllegalArgumentException("Resolution must be positive integers");
             camera.nX = nX;
             camera.nY = nY;
+            camera.imageWriter = new ImageWriter(nX, nY);
             return this;
         }
+
 
         /**
          * Builds the camera instance.
@@ -227,7 +305,27 @@ public class Camera implements Cloneable {
                 throw new IllegalArgumentException("To and Up vectors must not be parallel");
             }
 
+            if (camera.rayTracer == null) {//default if not defined
+                camera.rayTracer = new SimpleRayTracer(new scene.Scene("default"));
+            }
+
             return camera.clone();
         }
+
+        /**
+         * Sets the image writer for the camera.
+         * @param scene scene to be rendered
+         * @param type type of ray tracer
+         * @return the image writer
+         */
+        public Builder setRayTracer(Scene scene, RayTracerType type) {
+            if (type == RayTracerType.SIMPLE) {
+                camera.rayTracer = new SimpleRayTracer(scene);
+            } else {
+                camera.rayTracer = null;
+            }
+            return this;
+        }
+
     }
 }

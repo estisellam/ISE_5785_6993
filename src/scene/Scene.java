@@ -1,4 +1,4 @@
-package Scene;
+package scene;
 
 import geometries.Geometries;
 import lighting.AmbientLight;
@@ -9,10 +9,22 @@ import primitives.Color;
  * It contains the name of the scene.
  */
 public class Scene {
+    /**
+     * Name of the scene.
+     */
     final public String name;
+    /**
+     * Background color of the scene. this is public because it is used in the simple ray tracer class
+     */
     public Color background= Color.BLACK;
+    /**
+     * Geometries in the scene. this is public because it is used in the simple ray tracer class
+     */
     public Geometries geometries= new Geometries();
-    private AmbientLight ambientLight=AmbientLight.NONE;
+    /**
+     * Ambient light in the scene. this is public because it is used in the simple ray tracer class
+     */
+    public AmbientLight ambientLight=AmbientLight.NONE;
     /**
      * Constructor for Sence class.
      * @param name the name of the scene
