@@ -1,5 +1,6 @@
 package geometries;
 
+import primitives.Color;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
@@ -11,7 +12,32 @@ import java.util.List;
  * Provides methods to calculate the normal vector at a given point
  * and to find intersections with a given ray.
  */
-public abstract class Geometry implements Intersectable {
+public abstract class Geometry extends Intersectable {
+
+    /**
+     * The color of the geometry.
+     */
+    protected Color emission = Color.BLACK;
+
+    /**
+     * Default constructor for Geometry.
+     *
+     * @return A new instance of Geometry.
+     */
+    public Color getEmission() {
+        return emission;
+    }
+
+    /**
+     * Sets the emission color of the geometry.
+     *
+     * @param e The color to set as the emission color.
+     * @return
+     */
+    public Geometry setEmission(Color e) {
+        emission = e;
+        return this;
+    }
 
     /**
      * Returns the normal vector to the geometry at a given point.
@@ -27,5 +53,6 @@ public abstract class Geometry implements Intersectable {
      * @param ray The ray to intersect with the geometry.
      * @return A list of intersection points, or null if no intersections exist.
      */
-    public abstract List<Point> findIntersections(Ray ray);
+    @Override
+    protected abstract List<Intersection> calculateIntersectionsHelper(Ray ray);
 }

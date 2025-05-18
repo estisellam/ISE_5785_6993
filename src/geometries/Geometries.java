@@ -11,7 +11,7 @@ import java.util.List;
  * Represents a collection of geometries that can be intersected by a ray.
  * Provides methods to add geometries and find intersection points with a given ray.
  */
-public class Geometries implements Intersectable {
+public  class Geometries extends Intersectable {
 
     /**
      * A list of geometries in the collection.
@@ -44,15 +44,16 @@ public class Geometries implements Intersectable {
     }
 
     @Override
-    public List<Point> findIntersections(Ray ray) {
-        List<Point> intersections = null;
+        protected List<Intersection> calculateIntersectionsHelper(Ray ray) {
+        List<Intersection> intersections = null;
         for (Intersectable geo : geometries) {
-            List<Point> tempList = geo.findIntersections(ray);
-            if (tempList != null) {
+            List<Intersection> geometryIntersections = geo.calculateIntersections(ray);
+            if (geometryIntersections != null && !geometryIntersections.isEmpty()) {
                 if (intersections == null) {
-                    intersections = new LinkedList<>();
+                    intersections = new LinkedList<>(geometryIntersections);
+                } else {
+                    intersections.addAll(geometryIntersections);
                 }
-                intersections.addAll(tempList);
             }
         }
         return intersections;

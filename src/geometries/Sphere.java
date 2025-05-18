@@ -58,7 +58,7 @@ public class Sphere extends RadialGeometry {
 
 
     @Override
-    public List<Point> findIntersections(Ray ray) {
+    protected List<Intersection> calculateIntersectionsHelper(Ray ray) {
         Point p0 = ray.getHead();
         Vector v = ray.getDirection();
 
@@ -67,42 +67,43 @@ public class Sphere extends RadialGeometry {
             u = center.subtract(p0);
         } catch (IllegalArgumentException e) {
             // The ray starts at the center of the sphere
-            return List.of(center.add(v.scale(radius)));
+            return List.of(new Intersection(this,center.add(v.scale(radius))));
         }
 
         double tm = alignZero(u.dotProduct(v));
         double dSquared = alignZero(u.lengthSquared() - tm * tm);
         double rSquared = radius * radius;
 
-        if (dSquared >= rSquared) {
+        if (alignZero(dSquared- rSquared)>=0) {
             return null; // No intersection, the ray doesn't intersect the sphere
         }
 
-        double thSquared = alignZero(rSquared - dSquared);
-        if (isZero(thSquared)) {
-            return null; // Exactly one intersection, ray is tangent to the sphere
-        }
 
-        double th = Math.sqrt(thSquared);
+
+        double th = Math.sqrt(rSquared - dSquared);
+
         double t1 = alignZero(tm - th);
         double t2 = alignZero(tm + th);
 
         // Avoid returning point at head (t == 0 or negative)
-        boolean t1Valid = t1 > 0 && !isZero(t1);
-        boolean t2Valid = t2 > 0 && !isZero(t2);
+        boolean t1Valid = t1 > 0;
+        boolean t2Valid = t2 > 0;
 
         if (t1Valid && t2Valid) {
-            return List.of(ray.getPoint(t1), ray.getPoint(t2));
+            return List.of(new Intersection(this,ray.getPoint(t1)),new Intersection(this,ray.getPoint(t2)) );
         }
 
         if (t1Valid) {
-            return List.of(ray.getPoint(t1));
+            return List.of(new Intersection(this,ray.getPoint(t1)));
         }
 
         if (t2Valid) {
-            return List.of(ray.getPoint(t2));
+            return List.of(new Intersection(this, ray.getPoint(t2)));
         }
 
         return null; // No valid intersection
     }
+
+
+
 }
