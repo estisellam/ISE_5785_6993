@@ -77,41 +77,29 @@ public class RenderTests {
               .writeToImage("color render test");
    }
 
-   /** Test for XML based scene - for bonus
    @Test
-   public void basicRenderXml() {
-      Scene scene = new Scene("Using XML");
-      // enter XML file name and parse from XML file into scene object instead of the
-      // new Scene above,
-      // Use the code you added in appropriate packages
-      // ...
-      // NB: unit tests is not the correct place to put XML parsing code
+   void RenderMetrialTest() {
+      Scene scene = new Scene("Material")
+              .setAmbientLight(new AmbientLight(new primitives.Color(WHITE)));
 
-      camera //
-         .setRayTracer(scene, RayTracerType.SIMPLE) //
-         .setResolution(1000, 1000) //
-         .build() //
-         .renderImage() //
-         .printGrid(100, new Color(YELLOW)) //
-         .writeToImage("xml render test");
+      scene.geometries
+              .add(
+                      new Sphere(new Point(0, 0, -100), 50)
+                              .setMaterial(new Material().setKA(new Double3(0.4))),
+                      new Triangle(new Point(-100, 0, -100), new Point(0, 100, -100), new Point(-100, 100, -100))
+                              .setMaterial(new Material().setKA(new Double3(0, 0.8, 0))),
+                      new Triangle(new Point(-100, 0, -100), new Point(0, -100, -100), new Point(-100, -100, -100))
+                              .setMaterial(new Material().setKA(new Double3(0.8, 0, 0))),
+                      new Triangle(new Point(100, 0, -100), new Point(0, -100, -100), new Point(100, -100, -100))
+                              .setMaterial(new Material().setKA(new Double3(0, 0, 0.8)))
+              );
+
+      camera
+              .setRayTracer(scene, RayTracerType.SIMPLE)
+              .setResolution(1000, 1000)
+              .build()
+              .renderImage()
+              .printGrid(100, new Color(WHITE))
+              .writeToImage("material ambient test"); // שינוי שם הקובץ
    }
-
-   /** Test for JSON based scene - for bonus
-   @Test
-   public void basicRenderJson() {
-      Scene scene = new Scene("Using Json");
-      // enter XML file name and parse from JSON file into scene object instead of the
-      // new Scene above,
-      // Use the code you added in appropriate packages
-      // ...
-      // NB: unit tests is not the correct place to put XML parsing code
-
-      camera //
-         .setRayTracer(scene, RayTracerType.SIMPLE) //
-         .setResolution(1000, 1000) //
-         .build() //
-         .renderImage() //
-         .printGrid(100, new Color(YELLOW)) //
-         .writeToImage("xml render test");
-   }**/
 }

@@ -1,9 +1,6 @@
 package geometries;
 
-import primitives.Color;
-import primitives.Point;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
 
 import java.util.List;
 
@@ -18,7 +15,28 @@ public abstract class Geometry extends Intersectable {
      * The color of the geometry.
      */
     protected Color emission = Color.BLACK;
+    /**
+     * The material of the geometry.
+     */
+    private Material material=new Material();
 
+    /**
+     * gets the material of the geometry.
+     * @return The current instance of Geometry.
+     */
+    public Material getMaterial() {
+        return material;
+    }
+    /**
+     * Sets the material of the geometry.
+     *
+     * @param m The material to set.
+     * @return The current instance of Geometry.
+     */
+    public Geometry setMaterial(Material m) {
+        material = m;
+        return this;
+    }
     /**
      * Default constructor for Geometry.
      *

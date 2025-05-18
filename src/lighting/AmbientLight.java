@@ -5,8 +5,7 @@ import primitives.Color;
 /**
  * Ambient light class represents the light that is scattered in the
  */
-public class AmbientLight {
-    private  final Color intensity;
+public class AmbientLight extends Light {
     public static final AmbientLight NONE = new AmbientLight(Color.BLACK);
 
     /**
@@ -14,14 +13,8 @@ public class AmbientLight {
      * @param Ia the color of the ambient light
      */
     public AmbientLight(Color Ia) {
-        intensity = Ia;
+        super(Ia);
     }
 
-    /**
-     * Returns the intensity of the ambient light.
-     * @return
-     */
-    public Color getIntensity() {
-        return intensity;
-    }
+
 }
