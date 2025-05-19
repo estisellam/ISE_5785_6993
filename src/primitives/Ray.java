@@ -124,10 +124,17 @@ public class Ray {
             return null;
         }
 
-        Intersection closestIntersection = findClosestIntersection(
-                points.stream().map(p -> new Intersection(null, p)).toList()
-        );
+        Point closest = null;
+        double minDistanceSquared = Double.MAX_VALUE;
 
-        return closestIntersection == null ? null : closestIntersection.point;
+        for (Point p : points) {
+            double dist = this.head.distanceSquared(p); // assuming 'this' is a Ray and head is the origin
+            if (dist < minDistanceSquared) {
+                minDistanceSquared = dist;
+                closest = p;
+            }
+        }
+
+        return closest;
     }
 }

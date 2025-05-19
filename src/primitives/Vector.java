@@ -28,21 +28,6 @@ public class Vector extends Point {
     public static final Vector AXIS_Z = new Vector(0, 0, 1);
 
     /**
-     * Opposite unit vector along the X-axis.
-     */
-    public static final Vector MINUS_X = new Vector(-1, 0, 0);
-
-    /**
-     * Opposite unit vector along the Y-axis.
-     */
-    public static final Vector MINUS_Y = new Vector(0, -1, 0);
-
-    /**
-     * Opposite unit vector along the Z-axis.
-     */
-    public static final Vector MINUS_Z = new Vector(0, 0, -1);
-
-    /**
      * Constructs a vector using a `Double3` object.
      *
      * @param coordinate The 3D coordinates of the vector.

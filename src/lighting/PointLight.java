@@ -4,6 +4,8 @@ import primitives.Color;
 import primitives.Point;
 import primitives.Vector;
 
+import static primitives.Util.isZero;
+
 /**
  * Class representing a point light in a 3D scene.
  * The light has a position in space and its intensity decreases with distance.
@@ -18,25 +20,19 @@ public class PointLight extends Light implements LightSource {
     /**
      * Attenuation factors: constant (kC), linear (kL), and quadratic (kQ)
      */
-    private  double kC=0;
-    private  double kL=0;
-    private  double kQ=0;
+    private double kC = 0;
+    private double kL = 0;
+    private double kQ = 0;
 
     /**
      * Constructor for PointLight.
      *
      * @param position  the position of the light
      * @param intensity the intensity (color) of the light
-     * @param kC        constant attenuation factor
-     * @param kL        linear attenuation factor
-     * @param kQ        quadratic attenuation factor
      */
-    public PointLight(Point position, Color intensity, double kC, double kL, double kQ) {
+    public PointLight( Color intensity ,Point position) {
         super(intensity);
         this.position = position;
-        this.kC = kC;
-        this.kL = kL;
-        this.kQ = kQ;
     }
 
     /**
@@ -49,7 +45,12 @@ public class PointLight extends Light implements LightSource {
     public Color getIntensity(Point p) {
         double d = position.distance(p);
         double attenuation = kC + kL * d + kQ * d * d;
-        return intensity.reduce((int) attenuation);
+
+        if (isZero(attenuation)) {
+            return Color.BLACK;
+        }
+
+        return intensity.scale(1 / attenuation);
     }
 
     /**
@@ -61,5 +62,46 @@ public class PointLight extends Light implements LightSource {
     @Override
     public Vector getL(Point p) {
         return p.subtract(position).normalize();
+    }
+
+    /**
+     * set the constant attenuation factor
+     *
+     * @param kC constant attenuation factor
+     * @return this PointLight object for method chaining
+     */
+    public PointLight setKc(double kC) {
+        this.kC = kC;
+        return this;
+    }
+
+    /**
+     * set the linear attenuation factor
+     *
+     * @param kL linear attenuation factor
+     * @return this PointLight object for method chaining
+     */
+    public PointLight setKl(double kL) {
+        this.kL = kL;
+        return this;
+    }
+    /**
+     * set the quadratic attenuation factor
+     *
+     * @param kQ quadratic attenuation factor
+     * @return this PointLight object for method chaining
+     */
+    public PointLight setKq(double kQ) {
+        this.kQ = kQ;
+        return this;
+    }
+
+    /**
+     * Sets the narrow beam angle for the light.
+     * @param narrowBeam the narrow beam angle
+     * @return this PointLight object for method chaining
+     */
+    public PointLight setNarrowBeam(int narrowBeam) {
+        return this;
     }
 }

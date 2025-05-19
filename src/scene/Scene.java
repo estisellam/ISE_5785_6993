@@ -2,7 +2,11 @@ package scene;
 
 import geometries.Geometries;
 import lighting.AmbientLight;
+import lighting.LightSource;
 import primitives.Color;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Sence class represents a scene in the ray tracing process.
@@ -25,12 +29,27 @@ public class Scene {
      * Ambient light in the scene. this is public because it is used in the simple ray tracer class
      */
     public AmbientLight ambientLight=AmbientLight.NONE;
+
+    /**
+     * List of light sources in the scene.
+     */
+    public List<LightSource> lights=new LinkedList<>();
     /**
      * Constructor for Sence class.
      * @param name the name of the scene
      */
     public Scene(String name) {
         this.name = name;
+    }
+
+    /**
+     * Set the list of light sources in the scene.
+     * @param lights the list of light sources
+     * @return this scene object (for chaining)
+     */
+    public Scene setLights(List<LightSource> lights) {
+        this.lights = lights;
+        return this;
     }
     /**
      * Set the background color of the scene.

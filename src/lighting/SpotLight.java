@@ -13,6 +13,10 @@ public class SpotLight extends PointLight {
      * Vector representing the direction of the spotlight (normalized).
      */
     private final Vector direction;
+    /**
+     * Narrow beam angle in degrees
+     */
+    private int narrowBeam = 1;
 
     /**
      * Constructor for SpotLight.
@@ -20,12 +24,10 @@ public class SpotLight extends PointLight {
      * @param d         the direction of the light
      * @param intensity the intensity (color) of the light
      * @param position  the position of the light source
-     * @param kC        constant attenuation factor
-     * @param kL        linear attenuation factor
-     * @param kQ        quadratic attenuation factor
+
      */
-    public SpotLight(Vector d, Color intensity, Point position, double kC, double kL, double kQ) {
-        super(position, intensity, kC, kL, kQ);
+    public SpotLight( Color intensity, Point position,Vector d) {
+        super(intensity, position);
         this.direction = d.normalize();
     }
 
@@ -38,11 +40,13 @@ public class SpotLight extends PointLight {
     @Override
     public Color getIntensity(Point p) {
         Vector l = getL(p);
-        double factor = Math.max(0, direction.dotProduct(l));
-        if (factor == 0) {
+        double dirFactor = Math.max(0, direction.dotProduct(l));
+        if (dirFactor == 0) {
             return Color.BLACK;
         }
-        return super.getIntensity(p).scale(factor);
+
+        double focusFactor = Math.pow(dirFactor, narrowBeam);
+        return super.getIntensity(p).scale(focusFactor);
     }
 
     /**
@@ -55,4 +59,44 @@ public class SpotLight extends PointLight {
     public Vector getL(Point p) {
         return p.subtract(position).normalize();
     }
+
+    /**
+     * Sets the constant attenuation factor.
+     * @param kC the constant attenuation factor
+     * @return this SpotLight instance
+     */
+    public SpotLight setKC(double kC) {
+        super.setKc(kC);
+        return this;
+    }
+    /**
+     * Sets the linear attenuation factor.
+     * @param kL the linear attenuation factor
+     * @return this SpotLight instance
+     */
+    public SpotLight setKL(double kL) {
+        super.setKl(kL);
+        return this;
+    }
+    /**
+     * Sets the quadratic attenuation factor.
+     * @param kQ the quadratic attenuation factor
+     * @return this SpotLight instance
+     */
+    public SpotLight setKQ(double kQ) {
+        super.setKq(kQ);
+        return this;
+    }
+
+    /**
+     * Sets the narrow beam angle.
+     * @param narrowBeam the narrow beam angle in degrees
+     * @return this SpotLight instance
+     */
+    @Override
+    public SpotLight setNarrowBeam(int narrowBeam) {
+        this.narrowBeam = narrowBeam;
+        return this;
+    }
+
 }

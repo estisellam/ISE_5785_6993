@@ -58,6 +58,7 @@ public class Triangle extends Polygon {
         double s3 = alignZero(v.dotProduct(n3));
 
         if ((s1 > 0 && s2 > 0 && s3 > 0) || (s1 < 0 && s2 < 0 && s3 < 0))
+
             return List.of(new Intersection(this,p)); // Point is inside the triangle
 
         return null; // Point is outside the triangle

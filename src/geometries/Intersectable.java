@@ -1,7 +1,10 @@
 package geometries;
 
+import lighting.LightSource;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
+import primitives.Vector;
 
 import java.util.List;
 
@@ -44,17 +47,64 @@ public abstract class Intersectable {
      * Passive data structure representing a geometry and its intersection point.
      */
     public static class Intersection {
+        /**
+         * The geometry that was intersected.
+         */
         public final Geometry geometry;
+        /**
+         * The intersection point.
+         */
         public final Point point;
+        /**
+         * The material of the geometry.
+         */
+        public final Material material;
+        /**
+         * The direction of the ray that caused the intersection.
+         */
+        public Vector directionRay;
+        /**
+         * The normal vector in front the geometry in intersection point.
+         */
+        public Vector Normal;
+        /**
+         * scale of the direction of the ray and the normal vector
+         */
+        public Double ScaleDN;
+        /**
+         * The light source that caused the intersection.
+         */
+        public LightSource lightSource;
+        /**
+         * The direction from the light source to intersection point.
+         */
+        public Vector DirectionLightSource;
+        /**
+         * scale of the direction of the light source and the normal vector
+         */
+        public Double ScaleDL;
+
+
 
         /**
          * Constructs an intersection from a geometry and a point.
          * @param geometry the intersected geometry
          * @param point the intersection point
          */
-        public Intersection(Geometry geometry, Point point) {
+        public Intersection(Geometry geometry, Point point, Material material) {
+            if (geometry == null || point == null) {
+                throw new IllegalArgumentException("Geometry and point cannot be null");
+            }
+            this.material = material;
             this.geometry = geometry;
             this.point = point;
+        }
+        public Intersection(Geometry geometry, Point point) {
+            if (geometry == null)
+                throw new IllegalArgumentException("Geometry must not be null");
+            this.geometry = geometry;
+            this.point = point;
+            this.material = geometry.getMaterial();
         }
 
         @Override
