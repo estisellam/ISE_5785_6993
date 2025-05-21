@@ -4,6 +4,7 @@ import geometries.Intersectable;
 import lighting.LightSource;
 import primitives.*;
 import scene.Scene;
+
 import java.util.List;
 
 import static primitives.Util.alignZero;
@@ -16,6 +17,7 @@ public class SimpleRayTracer extends RayTracerBase {
 
     /**
      * Constructor for SimpleRayTracer.
+     *
      * @param scene the scene to be rendered
      */
     public SimpleRayTracer(Scene scene) {
@@ -42,25 +44,27 @@ public class SimpleRayTracer extends RayTracerBase {
      * @param intersection the closest intersection (geometry + point)
      * @return the color at the point
      */
-        private Color calcColor(Intersectable.Intersection intersection, Ray ray) {
-            if (!preprocessIntersection(intersection, ray.getDirection())) {
-                return Color.BLACK;
-            }
+    private Color calcColor(Intersectable.Intersection intersection, Ray ray) {
+        if (!preprocessIntersection(intersection, ray.getDirection())) {
+            return Color.BLACK;
+        }
 
-            Color ambient = scene.ambientLight.getIntensity().scale(intersection.material.KA);
-            Color localEffects = Color.BLACK;
+        Color ambient = scene.ambientLight.getIntensity().scale(intersection.material.KA);
+        Color localEffects = Color.BLACK;
 
-            for (LightSource light : scene.lights) {
-                if (!setLightSource(intersection, light)) continue;
+        for (LightSource light : scene.lights) {
+            if (!setLightSource(intersection, light)) continue;
 
-                localEffects = localEffects.add(calcColorLocalEffects(intersection));
-            }
+            localEffects = localEffects.add(calcColorLocalEffects(intersection));
+        }
 
-            Color emission = intersection.geometry.getEmission();
-            return ambient.add(localEffects).add(emission);        }
+        Color emission = intersection.geometry.getEmission();
+        return ambient.add(localEffects).add(emission);
+    }
 
     /**
      * Preprocesses the intersection data.
+     *
      * @param intersection the intersection data
      * @param rayDirection the direction of the ray
      * @return true if the intersection is valid, false otherwise
@@ -69,34 +73,37 @@ public class SimpleRayTracer extends RayTracerBase {
     public boolean preprocessIntersection(Intersectable.Intersection intersection, Vector rayDirection) {
         Vector normal = intersection.geometry.getNormal(intersection.point);
         double nv = normal.dotProduct(rayDirection);
-        intersection.Normal = normal;
+        intersection.normal = normal;
         intersection.directionRay = rayDirection;
-        intersection.ScaleDN = nv;
+        intersection.scaleDN = nv;
 
+        // Check if the ray is paralleled  to  the geometry
         return !isZero(nv);
     }
 
     /**
      * Sets the light source for the intersection.
+     *
      * @param intersection the intersection data
      * @param lightSource  the light source
      * @return true if the light source is valid, false otherwise
      */
     public boolean setLightSource(Intersectable.Intersection intersection, LightSource lightSource) {
         Vector l = lightSource.getL(intersection.point);
-        double nl = intersection.Normal.dotProduct(l);
-        double nv = intersection.Normal.dotProduct(intersection.directionRay);
+        double nl = alignZero(intersection.normal.dotProduct(l));
+        double nv = alignZero(intersection.normal.dotProduct(intersection.directionRay));
 
         intersection.lightSource = lightSource;
-        intersection.DirectionLightSource = l;
-        intersection.ScaleDL = nl;
-        intersection.ScaleDN = nv;
+        intersection.directionLightSource = l;
+        intersection.scaleDL = nl;
+        intersection.scaleDN = nv;
 
-        return !isZero(nl) && !isZero(nv) && nl * nv > 0;
+        return nl * nv > 0;
     }
 
     /**
      * Calculates the color at the intersection point based on local effects.
+     *
      * @param intersection the intersection data
      * @return the color at the intersection point
      */
@@ -105,17 +112,19 @@ public class SimpleRayTracer extends RayTracerBase {
         Double3 ks = intersection.material.KS;
         int nShininess = intersection.material.Nsh;
 
-        double nl = alignZero(intersection.Normal.dotProduct(intersection.DirectionLightSource));
-        double nv = alignZero(intersection.Normal.dotProduct(intersection.directionRay));
-        if (nl * nv <= 0) return Color.BLACK;
+        double nl = alignZero(intersection.normal.dotProduct(intersection.directionLightSource));
+        double nv = alignZero(intersection.normal.dotProduct(intersection.directionRay));
+        if (nl * nv <= 0)
+            return Color.BLACK;
 
         // Diffusive
-        Color diffusive = intersection.lightSource.getIntensity(intersection.point)
+        Color diffusive = intersection.lightSource
+                .getIntensity(intersection.point)
                 .scale(kd.scale(nl < 0 ? -nl : nl));
 
         // Specular
-        Vector r = intersection.DirectionLightSource.subtract(intersection.Normal.scale(2 * nl)).normalize();
-        double minusVR = -intersection.directionRay.dotProduct(r);
+        Vector r = intersection.directionLightSource.subtract(intersection.normal.scale(2 * nl)).normalize();
+        double minusVR = -1.0 * intersection.directionRay.dotProduct(r);
         if (minusVR <= 0) return diffusive; // no specular component
 
         Color specular = intersection.lightSource.getIntensity(intersection.point)
@@ -126,12 +135,13 @@ public class SimpleRayTracer extends RayTracerBase {
 
     /**
      * Calculates the specular component of the color at the intersection point.
+     *
      * @param intersection the intersection data
      * @return the specular component of the color
      */
     Double3 calcSpecular(Intersectable.Intersection intersection) {
-        Vector l = intersection.DirectionLightSource;
-        Vector n = intersection.Normal;
+        Vector l = intersection.directionLightSource;
+        Vector n = intersection.normal;
 
         // r = l - 2*(l·n)*n
         double ln = l.dotProduct(n);
@@ -149,11 +159,12 @@ public class SimpleRayTracer extends RayTracerBase {
 
     /**
      * Calculates the diffuse component of the color at the intersection point.
+     *
      * @param intersection the intersection data
      * @return the diffuse component of the color
      */
     Double3 calcDiffuse(Intersectable.Intersection intersection) {
-        double nl = intersection.ScaleDL;
+        double nl = intersection.scaleDL;
         if (nl <= 0) return Double3.ZERO;
 
         return intersection.material.KD.scale(nl);

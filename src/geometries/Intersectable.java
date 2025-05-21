@@ -66,23 +66,23 @@ public abstract class Intersectable {
         /**
          * The normal vector in front the geometry in intersection point.
          */
-        public Vector Normal;
+        public Vector normal;
         /**
          * scale of the direction of the ray and the normal vector
          */
-        public Double ScaleDN;
+        public Double scaleDN;
         /**
-         * The light source that caused the intersection.
+         *the light source that illuminates the scenet
          */
         public LightSource lightSource;
         /**
-         * The direction from the light source to intersection point.
+         * the light source that is directed to intersection point.
          */
-        public Vector DirectionLightSource;
+        public Vector directionLightSource;
         /**
          * scale of the direction of the light source and the normal vector
          */
-        public Double ScaleDL;
+        public Double scaleDL;
 
 
 
@@ -99,6 +99,12 @@ public abstract class Intersectable {
             this.geometry = geometry;
             this.point = point;
         }
+
+        /**
+         * Constructs an intersection from a geometry and a point.
+         * @param geometry the intersected geometry
+         * @param point the intersection point
+         */
         public Intersection(Geometry geometry, Point point) {
             if (geometry == null)
                 throw new IllegalArgumentException("Geometry must not be null");
