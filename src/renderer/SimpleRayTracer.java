@@ -24,6 +24,12 @@ public class SimpleRayTracer extends RayTracerBase {
         super(scene);
     }
 
+    /**
+     * Ray head offset size for shadow ray for moving the ray origin to avoid self-intersection
+     */
+    private static final double DELTA = 0.1;
+
+
     @Override
     public Color traceRay(Ray ray) {
         List<Intersectable.Intersection> intersections = scene.geometries.calculateIntersections(ray);
@@ -89,7 +95,14 @@ public class SimpleRayTracer extends RayTracerBase {
      * @return true if the light source is valid, false otherwise
      */
     public boolean setLightSource(Intersectable.Intersection intersection, LightSource lightSource) {
-        Vector l = lightSource.getL(intersection.point);
+        Vector l;
+        try {
+            l = lightSource.getL(intersection.point);
+            if (isZero(l.lengthSquared())) return false;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+
         double nl = alignZero(intersection.normal.dotProduct(l));
         double nv = alignZero(intersection.normal.dotProduct(intersection.directionRay));
 
@@ -100,6 +113,7 @@ public class SimpleRayTracer extends RayTracerBase {
 
         return nl * nv > 0;
     }
+
 
     /**
      * Calculates the color at the intersection point based on local effects.
@@ -117,15 +131,21 @@ public class SimpleRayTracer extends RayTracerBase {
         if (nl * nv <= 0)
             return Color.BLACK;
 
-        // Diffusive
+        // === Shadow check ===
+        if (!unshaded(intersection)) {
+            return Color.BLACK;
+        }
+
+        // === Diffuse ===
         Color diffusive = intersection.lightSource
                 .getIntensity(intersection.point)
                 .scale(kd.scale(nl < 0 ? -nl : nl));
 
-        // Specular
+        // === Specular ===
         Vector r = intersection.directionLightSource.subtract(intersection.normal.scale(2 * nl)).normalize();
         double minusVR = -1.0 * intersection.directionRay.dotProduct(r);
-        if (minusVR <= 0) return diffusive; // no specular component
+        if (minusVR <= 0)
+            return diffusive; // no specular component
 
         Color specular = intersection.lightSource.getIntensity(intersection.point)
                 .scale(ks.scale(Math.pow(minusVR, nShininess)));
@@ -169,4 +189,36 @@ public class SimpleRayTracer extends RayTracerBase {
 
         return intersection.material.KD.scale(nl);
     }
+
+    /**
+     * Checks if the point is unshaded (no object blocks the light).
+     *
+     * @param intersection the intersection point on the geometry
+     * @return true if the light source is not blocked, false if shadowed
+     */
+    private boolean unshaded(Intersectable.Intersection intersection) {
+        Vector l = intersection.directionLightSource;
+
+        if (l == null || isZero(l.lengthSquared())) {
+            return true; // no direction so assume not shaded
+        }
+
+        Ray shadowRay = new Ray(intersection.point, l.scale(-1), intersection.normal);
+
+        List<Intersectable.Intersection> intersections =
+                scene.geometries.calculateIntersections(shadowRay);
+
+        if (intersections == null)
+            return true;
+
+        double lightDistance = intersection.lightSource.getDistance(intersection.point);
+
+        for (Intersectable.Intersection i : intersections) {
+            if (intersection.point.distance(i.point) < lightDistance)
+                return false;
+        }
+
+        return true;
+    }
+
 }

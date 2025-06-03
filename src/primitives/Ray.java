@@ -137,4 +137,24 @@ public class Ray {
 
         return closest;
     }
+
+    // Small constant to avoid self-intersection
+    private static final double DELTA = 0.1;
+
+    /**
+     * Constructor that creates a ray from point p in direction dir,
+     *i add this constructor to avoid self-intersection when the ray is used for shadow calculations.
+     * @param p the starting point
+     * @param dir the direction vector (will be normalized)
+     * @param normal the surface normal to apply small shift
+     */
+    public Ray(Point p, Vector dir, Vector normal) {
+        direction = dir.normalize();
+
+        // Shift the start point along the normal to avoid self-intersection
+        double dot = normal.dotProduct(direction);
+        Vector delta = normal.scale(dot > 0 ? DELTA : -DELTA);
+        this.head = p.add(delta);
+    }
+
 }

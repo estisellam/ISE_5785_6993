@@ -21,6 +21,8 @@ public class Material {
      */
     public int Nsh=0;
 
+
+
     /**
      * setter for the reflection coefficient with a Double3 value
      * @param Kd point in 3D space

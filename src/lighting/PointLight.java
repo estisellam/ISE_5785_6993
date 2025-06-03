@@ -60,8 +60,14 @@ public class PointLight extends Light implements LightSource {
      */
     @Override
     public Vector getL(Point p) {
-        return p.subtract(position).normalize();
+        try {
+            return p.subtract(position).normalize();
+        } catch (IllegalArgumentException e) {
+            // happens when the point equals the light position
+            return null;
+        }
     }
+
 
     /**
      * set the constant attenuation factor
@@ -103,4 +109,10 @@ public class PointLight extends Light implements LightSource {
     public PointLight setNarrowBeam(int narrowBeam) {
         return this;
     }
+
+    @Override
+    public double getDistance(Point point) {
+        return point.distance(this.position);
+    }
+
 }
