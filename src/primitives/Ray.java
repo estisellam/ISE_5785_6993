@@ -139,7 +139,7 @@ public class Ray {
     }
 
     // Small constant to avoid self-intersection
-    private static final double DELTA = 0.1;
+    private static final double DELTA = 0.01;
 
     /**
      * Creates a new ray with the head slightly moved along the normal to avoid self-intersection.
@@ -151,7 +151,7 @@ public class Ray {
      */
     public static Ray createBiasedRay(Point head, Vector dir, Vector normal) {
         double dot = normal.dotProduct(dir);
-        Vector delta = normal.scale(dot > 0 ? DELTA : -DELTA);
+        Vector delta = dir.normalize().scale(DELTA);  //always move in the direction of the ray
         return new Ray(head.add(delta), dir);
     }
 

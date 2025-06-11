@@ -212,6 +212,7 @@ public class SimpleRayTracer extends RayTracerBase {
     /**
      * Calculates the color at the intersection point.
      * the recursive method that calculates the color at the intersection point call calcColor(Intersectable.Intersection intersection, Ray ray);
+     *
      * @param intersection the intersection data
      * @param ray          the ray that intersects with the geometry
      * @return the color at the intersection point
@@ -222,10 +223,11 @@ public class SimpleRayTracer extends RayTracerBase {
 
     /**
      * Calculates the color at the intersection point with recursion for reflections and refractions. called from calcColor(Intersectable.Intersection intersection, Ray ray);
+     *
      * @param intersection the intersection data
-     * @param ray the ray that intersects with the geometry
-     * @param level the current recursion level
-     * @param k the reflection/refraction coefficient
+     * @param ray          the ray that intersects with the geometry
+     * @param level        the current recursion level
+     * @param k            the reflection/refraction coefficient
      * @return the color at the intersection point
      */
     private Color calcColor(Intersectable.Intersection intersection, Ray ray, int level, Double3 k) {
@@ -249,14 +251,13 @@ public class SimpleRayTracer extends RayTracerBase {
     }
 
 
-
     /**
      * Calculates global effects like reflection and refraction (recursive).
      *
      * @param intersection the intersection data
-     * @param ray the incoming ray
-     * @param level recursion depth remaining
-     * @param k the cumulative reflection/refraction coefficient
+     * @param ray          the incoming ray
+     * @param level        recursion depth remaining
+     * @param k            the cumulative reflection/refraction coefficient
      * @return the color contribution from global effects
      */
     private Color calcGlobalEffects(Intersectable.Intersection intersection, Ray ray, int level, Double3 k) {
@@ -266,26 +267,36 @@ public class SimpleRayTracer extends RayTracerBase {
         Point point = intersection.point;
         Vector v = ray.getDirection();
 
-        // Reflection
+        // Reflection (KR)
         Double3 kR = intersection.material.KR;
         Double3 kkr = k.product(kR);
         if (!kkr.lowerThan(MIN_CALC_COLOR_K)) {
             Vector r = v.subtract(n.scale(2 * v.dotProduct(n))); // reflect direction
             Ray reflectedRay = Ray.createBiasedRay(point, r, n);
-            Intersectable.Intersection reflectedIntersection = findClosestIntersection(reflectedRay);
-            if (reflectedIntersection != null) {
-                color = color.add(calcColor(reflectedIntersection, reflectedRay, level - 1, kkr).scale(kR));
+
+            List<Intersectable.Intersection> reflectedIntersections = scene.geometries.calculateIntersections(reflectedRay);
+            if (reflectedIntersections != null) {
+                reflectedIntersections.removeIf(i -> i.geometry == intersection.geometry); // סינון הקריטי
+                Intersectable.Intersection reflectedIntersection = reflectedRay.findClosestIntersection(reflectedIntersections);
+                if (reflectedIntersection != null) {
+                    color = color.add(calcColor(reflectedIntersection, reflectedRay, level - 1, kkr).scale(kR));
+                }
             }
         }
 
-        // Refraction (transparency)
+        // Refraction (KT)
         Double3 kT = intersection.material.KT;
         Double3 kkt = k.product(kT);
         if (!kkt.lowerThan(MIN_CALC_COLOR_K)) {
             Ray refractedRay = Ray.createBiasedRay(point, v, n);  // same direction, bias with normal
-            Intersectable.Intersection refractedIntersection = findClosestIntersection(refractedRay);
-            if (refractedIntersection != null) {
-                color = color.add(calcColor(refractedIntersection, refractedRay, level - 1, kkt).scale(kT));
+
+            List<Intersectable.Intersection> refractedIntersections = scene.geometries.calculateIntersections(refractedRay);
+            if (refractedIntersections != null) {
+                refractedIntersections.removeIf(i -> i.geometry == intersection.geometry); // סינון הקריטי
+                Intersectable.Intersection refractedIntersection = refractedRay.findClosestIntersection(refractedIntersections);
+                if (refractedIntersection != null) {
+                    color = color.add(calcColor(refractedIntersection, refractedRay, level - 1, kkt).scale(kT));
+                }
             }
         }
 
@@ -311,8 +322,8 @@ public class SimpleRayTracer extends RayTracerBase {
      * Calculates the transparency at the intersection point based on the light source and the direction.
      *
      * @param intersection the intersection data
-     * @param l           the direction to the light source
-     * @param light       the light source
+     * @param l            the direction to the light source
+     * @param light        the light source
      * @return the transparency factor at the intersection point
      */
 
@@ -335,4 +346,20 @@ public class SimpleRayTracer extends RayTracerBase {
         return ktr;
     }
 
+    /**
+     * Calculate the average color from multiple rays (for Anti-Aliasing or DOF).
+     *
+     * @param rays list of rays to trace
+     * @return the averaged color
+     */
+    public Color traceRay(List<Ray> rays) {
+        Color totalColor = Color.BLACK; // start with black
+
+        for (Ray ray : rays) {
+            totalColor = totalColor.add(traceRay(ray)); // add color of each ray
+        }
+
+        // average = total / number of rays
+        return totalColor.reduce(rays.size());
+    }
 }

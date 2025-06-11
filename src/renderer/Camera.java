@@ -6,14 +6,26 @@ import primitives.Ray;
 import primitives.Vector;
 import scene.Scene;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.MissingResourceException;
 
+import static primitives.Util.alignZero;
 import static primitives.Util.isZero;
 
 /**
  * Camera class represents a virtual camera in 3D space.
  */
 public class Camera implements Cloneable {
+    /*  Anti-Aliasing (AA) feature variables
+     If true, the camera will use anti-aliasing and generate multiple rays per pixel*/
+    private boolean isAAEnabled = false;
+
+    /* How many rays to generate per pixel for anti-aliasing
+     For example: 81 means 9x9 grid of rays inside each pixel*/
+    private int aaRays = 81;
+
+
     /**
      * Camera location in 3D space.
      */
@@ -59,6 +71,8 @@ public class Camera implements Cloneable {
      * RayTracerBase instance for ray tracing.
      */
     private RayTracerBase rayTracer;
+
+
     /**
      * Default constructor for Camera.
      */
@@ -133,8 +147,9 @@ public class Camera implements Cloneable {
 
     /**
      * Prints the grid on the image.
+     *
      * @param interval interval between grid lines
-     * @param color color of the grid lines
+     * @param color    color of the grid lines
      * @return the camera instance
      */
     public Camera printGrid(int interval, Color color) {
@@ -167,11 +182,23 @@ public class Camera implements Cloneable {
      * @param j column index (X-axis)
      */
     private void castRay(int i, int j) {
-        Ray ray = constructRay(nX, nY, j, i);
-        primitives.Color color = rayTracer.traceRay(ray);
+        Color color;
+
+        if (isAAEnabled) {
+            // Create a list of rays for anti-aliasing
+            List<Ray> rays = constructAAbeamThroughPixel(nX, nY, j, i);
+
+            // Use the ray tracer to get the average color from all rays
+            color = rayTracer.traceRay(rays);
+        } else {
+            // Normal single ray
+            Ray ray = constructRay(nX, nY, j, i);
+            color = rayTracer.traceRay(ray);
+        }
+
+        // Write the color to the image
         imageWriter.writePixel(j, i, color);
     }
-
 
 
     /**
@@ -185,6 +212,7 @@ public class Camera implements Cloneable {
 
         /**
          * Sets the image writer for the camera.
+         *
          * @param location location of the image
          * @return the image writer
          */
@@ -314,8 +342,9 @@ public class Camera implements Cloneable {
 
         /**
          * Sets the image writer for the camera.
+         *
          * @param scene scene to be rendered
-         * @param type type of ray tracer
+         * @param type  type of ray tracer
          * @return the image writer
          */
         public Builder setRayTracer(Scene scene, RayTracerType type) {
@@ -326,6 +355,75 @@ public class Camera implements Cloneable {
             }
             return this;
         }
+
+    }
+
+    /**
+     * Enable or disable the Anti-Aliasing effect.
+     *
+     * @param enable true to turn on AA, false to turn it off
+     * @return the camera itself (for chaining)
+     */
+    public Camera enableAA(boolean enable) {
+        this.isAAEnabled = enable;
+        return this;
+    }
+
+    /**
+     * Set how many rays to use per pixel for anti-aliasing.
+     *
+     * @param count number of rays (must be a perfect square like 9, 25, 81, etc.)
+     * @return the camera itself (for chaining)
+     */
+    public Camera setAARays(int count) {
+        this.aaRays = count;
+        return this;
+    }
+
+    /**
+     * Generate a list of rays inside a single pixel for anti-aliasing.
+     * The rays go from the camera through different positions in the pixel.
+     *
+     * @param nX number of pixels in the X axis (width)
+     * @param nY number of pixels in the Y axis (height)
+     * @param j  column index of the pixel
+     * @param i  row index of the pixel
+     * @return list of rays inside the pixel for super-sampling -stage 8
+     */
+    public List<Ray> constructAAbeamThroughPixel(int nX, int nY, int j, int i) {
+        List<Ray> rays = new ArrayList<>();
+
+        int gridSize = (int) Math.sqrt(aaRays);
+        double rX = VpWidth / nX;
+        double rY = VpHeight / nY;
+
+        Point pc = location.add(to.scale(VpDistance))
+                .add(right.scale((j - (nX - 1) / 2.0) * rX))
+                .add(up.scale(-1 * (i - (nY - 1) / 2.0) * rY));
+
+        double subRx = rX / gridSize;
+        double subRy = rY / gridSize;
+
+        for (int row = 0; row < gridSize; row++) {
+            for (int col = 0; col < gridSize; col++) {
+                try {
+                    double xOffset = (col + 0.5) * subRx - rX / 2;
+                    double yOffset = (row + 0.5) * subRy - rY / 2;
+
+                    Point pij = pc.add(right.scale(xOffset)).add(up.scale(-yOffset));
+
+                    Vector dir = pij.subtract(location);
+                    if (!isZero(dir.lengthSquared())) {
+                        rays.add(new Ray(location, dir));
+                    }
+                } catch (IllegalArgumentException e) {
+                    // Skip ray if it causes a zero vector or other error
+                }
+            }
+
+
+        }
+        return rays;
 
     }
 }
