@@ -6,10 +6,7 @@ import primitives.Ray;
 import primitives.Vector;
 import scene.Scene;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.MissingResourceException;
-import java.util.Random;
+import java.util.*;
 
 import static primitives.Util.alignZero;
 import static primitives.Util.isZero;
@@ -582,8 +579,7 @@ public class Camera implements Cloneable {
 
     /**
      * pro2
-     * Adaptive ray casting method that recursively traces rays through a pixel
-     * until a certain depth is reached or the pixel size is small enough.
+     * Main function that starts adaptive sampling with a new cache
      *
      * @param center      the center point of the pixel
      * @param pixelWidth  width of the pixel
@@ -591,17 +587,41 @@ public class Camera implements Cloneable {
      * @param depth       current recursion depth
      * @return the averaged color for the pixel
      */
-
     private Color adaptiveCastRay(Point center, double pixelWidth, double pixelHeight, int depth) {
+        Map<Point, Color> cache = new HashMap<>();
+        return adaptiveCastRay(center, pixelWidth, pixelHeight, depth, cache);
+    }
 
-        //if the maximum depth is reached, or the pixel size is too small, trace a single ray
+    /**
+     * pro2
+     * Recursive function that does adaptive super sampling with caching
+     * Adaptive ray casting method that recursively traces rays through a pixel
+     * until a certain depth is reached or the pixel size is small enough.
+     * This version uses a cache to avoid recalculating colors for the same point.
+     *
+     * @param center
+     * @param pixelWidth
+     * @param pixelHeight
+     * @param depth
+     * @param cache
+     * @return
+     */
+    private Color adaptiveCastRay(Point center, double pixelWidth, double pixelHeight, int depth, Map<Point, Color> cache) {
+        // Check if this point was already calculated
+        if (cache.containsKey(center)) {
+            return cache.get(center);
+        }
+
+        // If max depth is reached, send one ray with jitter
         if (depth == 0) {
             Point samplePoint = jitteredPoint(center, pixelWidth, pixelHeight);
             Vector dir = samplePoint.subtract(location);
-            return rayTracer.traceRay(new Ray(location, dir));
+            Color color = rayTracer.traceRay(new Ray(location, dir));
+            cache.put(center, color);
+            return color;
         }
 
-        //calculate the four corners of the pixel (the color)
+        // Divide the pixel to 4 corners
         double halfWidth = pixelWidth / 2;
         double halfHeight = pixelHeight / 2;
 
@@ -610,24 +630,36 @@ public class Camera implements Cloneable {
         Point bottomLeft = center.add(right.scale(-halfWidth)).add(up.scale(-halfHeight));
         Point bottomRight = center.add(right.scale(halfWidth)).add(up.scale(-halfHeight));
 
-        Color c1 = traceJitteredRay(topLeft, pixelWidth / 2, pixelHeight / 2);
-        Color c2 = traceJitteredRay(topRight, pixelWidth / 2, pixelHeight / 2);
-        Color c3 = traceJitteredRay(bottomLeft, pixelWidth / 2, pixelHeight / 2);
-        Color c4 = traceJitteredRay(bottomRight, pixelWidth / 2, pixelHeight / 2);
+        // Send rays to 4 corners and get the colors
+        Color c1 = traceCachedRay(topLeft, halfWidth, halfHeight, cache);
+        Color c2 = traceCachedRay(topRight, halfWidth, halfHeight, cache);
+        Color c3 = traceCachedRay(bottomLeft, halfWidth, halfHeight, cache);
+        Color c4 = traceCachedRay(bottomRight, halfWidth, halfHeight, cache);
 
-
-        //check if all 4 colors are similar
-        if (areColorsSimilar(c1, c2) && areColorsSimilar(c1, c3) &&
-                areColorsSimilar(c1, c4)) {
-            return averageColor(List.of(c1, c2, c3, c4));
+        // If all colors are similar, return their average
+        if (areColorsSimilar(c1, c2) && areColorsSimilar(c1, c3) && areColorsSimilar(c1, c4)) {
+            Color avg = averageColor(List.of(c1, c2, c3, c4));
+            cache.put(center, avg);
+            return avg;
         }
 
-        //if not similar, split the pixel into 4 sub-pixels and cast rays recursively
-        Color sub1 = adaptiveCastRay(topLeft, pixelWidth / 2, pixelHeight / 2, depth - 1);
-        Color sub2 = adaptiveCastRay(topRight, pixelWidth / 2, pixelHeight / 2, depth - 1);
-        Color sub3 = adaptiveCastRay(bottomLeft, pixelWidth / 2, pixelHeight / 2, depth - 1);
-        Color sub4 = adaptiveCastRay(bottomRight, pixelWidth / 2, pixelHeight / 2, depth - 1);
+        // If colors are different, divide the pixel again
+        Color sub1 = adaptiveCastRay(topLeft, halfWidth, halfHeight, depth - 1, cache);
+        Color sub2 = adaptiveCastRay(topRight, halfWidth, halfHeight, depth - 1, cache);
+        Color sub3 = adaptiveCastRay(bottomLeft, halfWidth, halfHeight, depth - 1, cache);
+        Color sub4 = adaptiveCastRay(bottomRight, halfWidth, halfHeight, depth - 1, cache);
 
-        return averageColor(List.of(sub1, sub2, sub3, sub4));
+        Color avg = averageColor(List.of(sub1, sub2, sub3, sub4));
+        cache.put(center, avg);
+        return avg;
+    }
+
+    // This function checks cache before sending a ray
+    private Color traceCachedRay(Point point, double pixelWidth, double pixelHeight, Map<Point, Color> cache) {
+        if (cache.containsKey(point))
+            return cache.get(point);
+        Color color = traceJitteredRay(point, pixelWidth, pixelHeight);
+        cache.put(point, color);
+        return color;
     }
 }
