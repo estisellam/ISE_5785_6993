@@ -18,6 +18,22 @@ import static primitives.Util.isZero;
  * Camera class represents a virtual camera in 3D space.
  */
 public class Camera implements Cloneable {
+
+    /**
+     * pro2
+     * Adaptive feature variables for rendering the image
+     * with adaptive sampling, the camera can adjust how many rays to shoot
+     * based on the complexity of the scene in each pixel.
+     **/
+    private boolean isAdaptiveEnabled = false;
+    /**
+     * pro2
+     * the depth of adaptive sampling.
+     * this amount used to determine how many times to split a pixel
+     */
+    private int adaptiveDepth = 4;
+
+
     /*  Anti-Aliasing (AA) feature variables
      If true, the camera will use anti-aliasing and generate multiple rays per pixel*/
     private boolean isAAEnabled = false;
@@ -28,6 +44,30 @@ public class Camera implements Cloneable {
 
     // This variable decides if we want to use jitter (random small changes) -stage 8 -bonus
     private boolean useJitter = false;
+
+    /**
+     * pro2
+     * Enable or disable adaptive sampling.
+     *
+     * @param enable true to enable adaptive sampling, false to disable it
+     * @return the camera itself (for chaining)
+     */
+    public Camera enableAdaptive(boolean enable) {
+        this.isAdaptiveEnabled = enable;
+        return this;
+    }
+
+    /**
+     * pro2
+     * set function for adaptive depth.
+     *
+     * @param depth the depth of adaptive sampling
+     * @return the camera itself (for chaining)
+     */
+    public Camera setAdaptiveDepth(int depth) {
+        this.adaptiveDepth = depth;
+        return this;
+    }
 
     /**
      * Turn on jitter mode.
@@ -147,14 +187,29 @@ public class Camera implements Cloneable {
     }
 
     /**
-     * Renders the image by casting rays through all pixels on the view plane.
+     * pro2
+     * Renders the image by casting rays through each pixel of the view plane.
+     * This method uses the ray tracer to trace rays and color the pixels accordingly.
+     * It supports both single-threaded and multi-threaded ray tracing.
      *
-     * @return the camera instance (for method chaining)
+     * @return the camera instance itself for chaining
      */
     public Camera renderImage() {
-        for (int i = 0; i < nY; i++) {
-            for (int j = 0; j < nX; j++) {
-                castRay(i, j);
+        // Check if the ray tracer is set, if not throw an exception
+        if (rayTracer instanceof MultiThreadedRayTracer) {
+            // Use parallel processing for ray casting if MultiThreadedRayTracer is used
+            java.util.stream.IntStream.range(0, nY).parallel().forEach(i -> {
+                for (int j = 0; j < nX; j++) {
+                    castRay(i, j);
+                }
+            });
+        }
+        // If not using MultiThreadedRayTracer, use sequential processing
+        else {
+            for (int i = 0; i < nY; i++) {
+                for (int j = 0; j < nX; j++) {
+                    castRay(i, j);
+                }
             }
         }
         return this;
@@ -200,19 +255,20 @@ public class Camera implements Cloneable {
     private void castRay(int i, int j) {
         Color color;
 
-        if (isAAEnabled) {
-            // Create a list of rays for anti-aliasing
-            List<Ray> rays = constructAAbeamThroughPixel(nX, nY, j, i);
+        if (isAdaptiveEnabled) {
+            Point center = location.add(to.scale(VpDistance))
+                    .add(right.scale((j - (nX - 1) / 2.0) * (VpWidth / nX)))
+                    .add(up.scale(-(i - (nY - 1) / 2.0) * (VpHeight / nY)));
 
-            // Use the ray tracer to get the average color from all rays
+            color = adaptiveCastRay(center, VpWidth / nX, VpHeight / nY, adaptiveDepth);
+        } else if (isAAEnabled) {
+            List<Ray> rays = constructAAbeamThroughPixel(nX, nY, j, i);
             color = rayTracer.traceRay(rays);
         } else {
-            // Normal single ray
             Ray ray = constructRay(nX, nY, j, i);
             color = rayTracer.traceRay(ray);
         }
 
-        // Write the color to the image
         imageWriter.writePixel(j, i, color);
     }
 
@@ -366,8 +422,8 @@ public class Camera implements Cloneable {
         public Builder setRayTracer(Scene scene, RayTracerType type) {
             if (type == RayTracerType.SIMPLE) {
                 camera.rayTracer = new SimpleRayTracer(scene);
-            } else {
-                camera.rayTracer = null;
+            } else if (type == RayTracerType.MULTI_THREADED) {//check if multi-threaded pro2
+                camera.rayTracer = new MultiThreadedRayTracer(scene);
             }
             return this;
         }
@@ -396,6 +452,16 @@ public class Camera implements Cloneable {
         return this;
     }
 
+    /**
+     * pro2
+     * Constructs a beam of rays through a pixel for anti-aliasing.
+     *
+     * @param nX number of pixels in the X direction
+     * @param nY number of pixels in the Y direction
+     * @param j  column index of the pixel (X-axis)
+     * @param i  row index of the pixel (Y-axis)
+     * @return list of rays that go through the pixel (i,j)
+     */
     public List<Ray> constructAAbeamThroughPixel(int nX, int nY, int j, int i) {
         List<Ray> rays = new ArrayList<>();
 
@@ -445,5 +511,123 @@ public class Camera implements Cloneable {
         }
 
         return rays;
+    }
+
+    /**
+     * pro2
+     * Generates a jittered point around the base point.
+     * we use this to create a small random offset for anti-aliasing.
+     * to make the image smoother, we shoot rays to slightly different points around the pixel center.
+     *
+     * @param base        the point to jitter from (usually the center of the pixel)
+     * @param pixelWidth  the width of the pixel
+     * @param pixelHeight the height of the pixel
+     * @return point with jitter applied
+     */
+    private Point jitteredPoint(Point base, double pixelWidth, double pixelHeight) {
+        double dx = 0, dy = 0;
+        if (useJitter) {
+            Random rand = new Random();
+            dx = (rand.nextDouble() - 0.5) * pixelWidth;
+            dy = (rand.nextDouble() - 0.5) * pixelHeight;
+        }
+        return base.add(right.scale(dx)).add(up.scale(dy));
+    }
+
+    /**
+     * pro2
+     * Traces a ray from the camera location to a jittered point
+     *
+     * @param base        the base point to jitter from (usually the center of the pixel)
+     * @param pixelWidth  the width of the pixel
+     * @param pixelHeight the height of the pixel
+     * @return the color of the traced ray
+     */
+    private Color traceJitteredRay(Point base, double pixelWidth, double pixelHeight) {
+        Point p = jitteredPoint(base, pixelWidth, pixelHeight);
+        return rayTracer.traceRay(new Ray(location, p.subtract(location)));
+    }
+
+
+    /**
+     * pro2
+     * Checks if two colors are similar enough to be considered the same.
+     * This is used to avoid unnecessary calculations in adaptive ray casting.
+     *
+     * @param c1 first color
+     * @param c2 second color
+     * @return true if colors are similar, false otherwise
+     */
+    private boolean areColorsSimilar(Color c1, Color c2) {
+        double threshold = 10.0; // אפשר לשנות לפי איכות מבוקשת
+        return Math.abs(c1.getRed() - c2.getRed()) < threshold &&
+                Math.abs(c1.getGreen() - c2.getGreen()) < threshold &&
+                Math.abs(c1.getBlue() - c2.getBlue()) < threshold;
+    }
+
+    /**
+     * pro2
+     * method to calculate the average color from a list of colors.
+     *
+     * @param colors list of colors to average
+     * @return the average color
+     */
+    private Color averageColor(List<Color> colors) {
+        Color sum = Color.BLACK;
+        for (Color c : colors) {
+            sum = sum.add(c);
+        }
+        return sum.reduce(colors.size());
+    }
+
+    /**
+     * pro2
+     * Adaptive ray casting method that recursively traces rays through a pixel
+     * until a certain depth is reached or the pixel size is small enough.
+     *
+     * @param center      the center point of the pixel
+     * @param pixelWidth  width of the pixel
+     * @param pixelHeight height of the pixel
+     * @param depth       current recursion depth
+     * @return the averaged color for the pixel
+     */
+
+    private Color adaptiveCastRay(Point center, double pixelWidth, double pixelHeight, int depth) {
+
+        //if the maximum depth is reached, or the pixel size is too small, trace a single ray
+        if (depth == 0) {
+            Point samplePoint = jitteredPoint(center, pixelWidth, pixelHeight);
+            Vector dir = samplePoint.subtract(location);
+            return rayTracer.traceRay(new Ray(location, dir));
+        }
+
+        //calculate the four corners of the pixel (the color)
+        double halfWidth = pixelWidth / 2;
+        double halfHeight = pixelHeight / 2;
+
+        Point topLeft = center.add(right.scale(-halfWidth)).add(up.scale(halfHeight));
+        Point topRight = center.add(right.scale(halfWidth)).add(up.scale(halfHeight));
+        Point bottomLeft = center.add(right.scale(-halfWidth)).add(up.scale(-halfHeight));
+        Point bottomRight = center.add(right.scale(halfWidth)).add(up.scale(-halfHeight));
+
+        Color c1 = traceJitteredRay(topLeft, pixelWidth / 2, pixelHeight / 2);
+        Color c2 = traceJitteredRay(topRight, pixelWidth / 2, pixelHeight / 2);
+        Color c3 = traceJitteredRay(bottomLeft, pixelWidth / 2, pixelHeight / 2);
+        Color c4 = traceJitteredRay(bottomRight, pixelWidth / 2, pixelHeight / 2);
+
+
+        //check if all 4 colors are similar
+        if (areColorsSimilar(c1, c2) && areColorsSimilar(c1, c3) &&
+                areColorsSimilar(c1, c4)) {
+            return averageColor(List.of(c1, c2, c3, c4));
+        }
+
+        //if not similar, split the pixel into 4 sub-pixels and cast rays recursively
+        Color sub1 = adaptiveCastRay(topLeft, pixelWidth / 2, pixelHeight / 2, depth - 1);
+        Color sub2 = adaptiveCastRay(topRight, pixelWidth / 2, pixelHeight / 2, depth - 1);
+        Color sub3 = adaptiveCastRay(bottomLeft, pixelWidth / 2, pixelHeight / 2, depth - 1);
+        Color sub4 = adaptiveCastRay(bottomRight, pixelWidth / 2, pixelHeight / 2, depth - 1);
+
+        return averageColor(List.of(sub1, sub2, sub3, sub4));
     }
 }

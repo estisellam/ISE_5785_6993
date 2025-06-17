@@ -11,5 +11,9 @@ public enum RayTracerType {
     /**
      * Ray tracer using regular grid
      */
-    GRID
+    GRID,
+    /**
+     * Ray tracer using adaptive grid - for more efficient memory usage
+     */
+    MULTI_THREADED
 }

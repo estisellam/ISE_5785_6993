@@ -19,8 +19,11 @@ class createMagicalSunsetUnderwaterScene {
             .setVpSize(200, 200)
             .setRayTracer(scene, RayTracerType.SIMPLE);
 
-    @Test
-    void basicUnderwaterScene() {
+    /**
+     * Creates a magical underwater scene with a sunset atmosphere.
+     */
+    private void buildUnderwaterScene() {
+
         // === Water Surface & Ripples ===
         // Create a transparent water plane and add small ripple spheres for realism
         scene.geometries.add(
@@ -559,17 +562,19 @@ class createMagicalSunsetUnderwaterScene {
                         .setNarrowBeam(10)
 
         );
-        // === Camera & Render ===
-        // Build camera, render the full scene and output to image file
-        camera.setResolution(600, 600)
-                .build()
-                .enableAA(true)          // ← Turn on Anti-Aliasing -stage 8
-                .setAARays(20) // ← Set number of rays per pixel for AA -stage 8
-                .renderImage()
-                .enableJitter()
-                .writeToImage("oceanUnderwaterScene");
+
+
     }
 
+    /**
+     * Add a fish to the scene at the specified center point with given dimensions and color.
+     *
+     * @param scene      the scene to add the fish to
+     * @param center     the center point of the fish
+     * @param bodyLength the length of the fish body
+     * @param bodyRadius the radius of the fish body
+     * @param bodyColor  the color of the fish body
+     */
     private void addFish(Scene scene, Point center, double bodyLength, double bodyRadius, Color bodyColor) {
         // === Fish Body ===
         // Create the main body sphere for the fish
@@ -627,6 +632,93 @@ class createMagicalSunsetUnderwaterScene {
                         .setEmission(new Color(10, 10, 10))
                         .setMaterial(new Material().setKD(0).setKS(0.3).setShininess(20))
         );
+    }
+
+    // Case 1: AA without Adaptive, no multithreading
+    // Checks image quality and time
+    @Test
+    void test_NoAdaptive_NoMT() {
+        buildUnderwaterScene();
+
+        camera.setResolution(600, 600)
+                .setRayTracer(scene, RayTracerType.SIMPLE);
+
+        Camera cam = camera.build()
+                .enableAdaptive(false)
+                .enableAA(true)
+                .setAARays(81)
+                .enableJitter();
+
+        long start = System.nanoTime();
+        cam.renderImage().writeToImage("underwater_NoAdaptive_NoMT");
+        long end = System.nanoTime();
+
+        System.out.println("case 1- NoAdaptive + NoMT: " + (end - start) / 1e9 + " seconds");
+    }
+
+    // Case 2: AA without Adaptive, with multithreading
+    // Checks image quality and time
+    @Test
+    void test_NoAdaptive_MT() {
+        buildUnderwaterScene();
+
+        camera.setResolution(600, 600)
+                .setRayTracer(scene, RayTracerType.MULTI_THREADED);
+
+        Camera cam = camera.build()
+                .enableAdaptive(false)
+                .enableAA(true)
+                .setAARays(81)
+                .enableJitter();
+
+        long start = System.nanoTime();
+        cam.renderImage().writeToImage("underwater_NoAdaptive_MT");
+        long end = System.nanoTime();
+
+        System.out.println("case 2- NoAdaptive + MT: " + (end - start) / 1e9 + " seconds");
+    }
+
+// Case 3: Adaptive AA, no multithreading
+// Checks image quality and time
+
+    @Test
+    void test_Adaptive_NoMT() {
+        buildUnderwaterScene();
+
+        camera.setResolution(600, 600)
+                .setRayTracer(scene, RayTracerType.SIMPLE);
+
+        Camera cam = camera.build()
+                .enableAdaptive(true)
+                .setAdaptiveDepth(4)
+                .enableJitter();
+
+        long start = System.nanoTime();
+        cam.renderImage().writeToImage("underwater_Adaptive_NoMT");
+        long end = System.nanoTime();
+
+        System.out.println("case 3- Adaptive + NoMT: " + (end - start) / 1e9 + " seconds");
+    }
+
+    // Case 4: Adaptive AA, with multithreading
+    // Checks image quality and time
+    @Test
+    void test_Adaptive_MT() {
+        buildUnderwaterScene();
+
+        camera.setResolution(600, 600)
+                .setRayTracer(scene, RayTracerType.MULTI_THREADED);
+
+        Camera cam = camera.build()
+                .enableAdaptive(true)
+                .setAdaptiveDepth(4)
+                .enableJitter();
+
+        long start = System.nanoTime();
+        cam.renderImage().writeToImage("underwater_Adaptive_MT");
+        long end = System.nanoTime();
+
+        System.out.println("case 4-Adaptive + MT: " + (end - start) / 1e9 + " seconds");
     }
 }
 

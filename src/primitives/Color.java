@@ -9,6 +9,35 @@ package primitives;
  * @author Dan Zilberstein
  */
 public class Color {
+
+    /**
+     * Get the red component of the color.
+     *
+     * @return the red component as a double value
+     */
+    public double getRed() {
+        return rgb.d1();
+    }
+
+    /**
+     * Get the green component of the color.
+     *
+     * @return the green component as a double value
+     */
+    public double getGreen() {
+        return rgb.d2();
+    }
+
+    /**
+     * Get the blue component of the color.
+     *
+     * @return the blue component as a double value
+     */
+    public double getBlue() {
+        return rgb.d3();
+    }
+
+
     /**
      * Black color = (0,0,0)
      */
